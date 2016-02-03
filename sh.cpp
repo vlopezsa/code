@@ -1,10 +1,9 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <stdio.h>
 #include <stdlib.h>
 #include <GL/glut.h>
-
-#include "glCamera.h"
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846
@@ -13,6 +12,9 @@
 #ifndef M_PI_2
 #define M_PI_2     1.57079632679489661923
 #endif
+
+#define S_RINGS		64
+#define S_SECTORS	64
 
 using namespace std;
 
@@ -56,7 +58,7 @@ int factorial(int x)
 
 float K(int l, int m)
 {
-	double temp = ((2.0*l + 1.0)*factorial(l - m)) / (4.0*PI*factorial(l + m));
+	double temp = ((2.0*l + 1.0)*factorial(l - m)) / (4.0*M_PI*factorial(l + m));
 	return (float)sqrt(temp);
 }
 
@@ -133,15 +135,19 @@ void CreateSphere(unsigned int rings, unsigned int sectors)
 			float phi   = (float)(2 * M_PI * s * S);
 			float theta = (float)(M_PI * r * R);
 
-			float const y = (float)sin(-M_PI_2 + theta);
-			float const x = (float)(cos(phi) * sin(theta));
-			float const z = (float)(sin(phi) * sin(theta));
+			float y = (float)sin(-M_PI_2 + theta);
+			float x = (float)(cos(phi) * sin(theta));
+			float z = (float)(sin(phi) * sin(theta));
 
 			float const sh = SH(g_iOrder, g_iDegree, theta, phi);
 
 			*t++ = s*S;
 			*t++ = r*R;
 
+			x *= fabs(sh);
+			y *= fabs(sh);
+			z *= fabs(sh);
+			
 			*v++ = x;
 			*v++ = y;
 			*v++ = z;
@@ -225,7 +231,7 @@ void ReShapeFunc(GLsizei w, GLsizei h) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	gluPerspective(40.0, (GLdouble)w / (GLdouble)h, 0.6, 50.0);
+	gluPerspective(40.0, (GLdouble)w / (GLdouble)h, 0.6, 500.0);
 	glMatrixMode(GL_MODELVIEW);
 	glViewport(0, 0, w, h);
 }
@@ -243,8 +249,8 @@ void KeyFunc(unsigned char k, int x, int y)
 	case 's': case 'S':
 		g_fPos[2] -= 0.2f;
 
-		if (g_fPos[2] < -30.0f)
-			g_fPos[2] = -30.0f;
+		if (g_fPos[2] < -100.0f)
+			g_fPos[2] = -100.0f;
 		break;
 	case 'd': case 'D':
 		g_fPos[0] += 0.2f;
@@ -265,13 +271,13 @@ void KeyFunc(unsigned char k, int x, int y)
 			g_iOrder;
 		else
 		{
-			CreateSphere(32,32);
+			CreateSphere(S_RINGS, S_SECTORS);
 			UpdateWindowTitle();
 		}
 		break;
 	case 'o': case 'O':
 		g_iOrder++;
-		CreateSphere(32, 32);
+		CreateSphere(S_RINGS, S_SECTORS);
 		UpdateWindowTitle();
 		break;
 	case 'k': case 'K':
@@ -280,7 +286,7 @@ void KeyFunc(unsigned char k, int x, int y)
 			g_iDegree = -g_iOrder;
 		else
 		{
-			CreateSphere(32, 32);
+			CreateSphere(S_RINGS, S_SECTORS);
 			UpdateWindowTitle();
 		}
 		break;
@@ -290,7 +296,7 @@ void KeyFunc(unsigned char k, int x, int y)
 			g_iDegree = g_iOrder;
 		else
 		{
-			CreateSphere(32, 32);
+			CreateSphere(S_RINGS, S_SECTORS);
 			UpdateWindowTitle();
 		}
 		break;
@@ -338,7 +344,7 @@ void RenderInit()
 
 int main(int argc, char* argv[])
 {
-	CreateSphere(32, 32);
+	CreateSphere(S_RINGS, S_SECTORS);
 
 	glutInitWindowSize(g_iWidth, g_iHeight);
 	glutInit(&argc, argv);
