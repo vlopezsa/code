@@ -33,6 +33,8 @@ typedef struct {
 
 	tMesh	    *mesh;
 	tTexture	*tex;
+
+    char        file[1024];
 } tModel;
 
 int LoadModel(char *strFile, tModel *m);

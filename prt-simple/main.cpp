@@ -88,6 +88,7 @@ GLboolean CheckGLError()
 
 
 void EndProgram() {
+    light.finish();
     ReleaseModel(&model);
     ImageLoader::Close();
     glutDestroyWindow(MainWinId);
@@ -129,7 +130,7 @@ void Render() {
     glUseProgram(GlobalProgramObject);
 
     glPushMatrix();
-    glScalef(0.1f, 0.1f, 0.1f);
+    glScalef(0.01f, 0.01f, 0.01f);
     glEnable(GL_CULL_FACE);
 
     for (int j = 0; j<model.nMesh; j++) {
@@ -401,19 +402,18 @@ int main(int argc, char *argv[]) {
     glewInit();
     SetCameraInitialPos();
 
-    /*if (LoadModel("spider.irrmesh", &model))
+    if (LoadModel("spider.irrmesh", &model))
         if (LoadModel("models/spider.irrmesh", &model))
-            if (LoadModel("../models/spider.irrmesh", &model))*/
-    if (LoadModel("cellar.irrmesh", &model))
+            if (LoadModel("../models/spider.irrmesh", &model))
+   /* if (LoadModel("cellar.irrmesh", &model))
                     if (LoadModel("models/cellar.irrmesh", &model))
-                        if (LoadModel("../models/cellar.irrmesh", &model))
-   /* if (LoadModel("ncasti.txt", &model))
+                        if (LoadModel("../models/cellar.irrmesh", &model))*/
+    /*if (LoadModel("ncasti.txt", &model))
         if (LoadModel("models/castillo/ncasti.txt", &model))
             if (LoadModel("../models/castillo/ncasti.txt", &model))*/
                 printf("Failed to load model\n");
 
     /* Setting the light model */
-    light.setNumberBands(2);
     light.setGeometry(&model);
     
     if (light.setLightProbeFromFile("probes/forest.png"))
@@ -421,7 +421,7 @@ int main(int argc, char *argv[]) {
             printf("Couldn't load light probe file\n");
 
     /* Pre calculate light coefficients */
-    light.computeCoefficients();
+    light.computeCoefficients(1600, 2, false);
 
     LoadShaderEngine();
 

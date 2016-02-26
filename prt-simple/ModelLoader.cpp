@@ -236,6 +236,8 @@ int LoadModel(char *strFile, tModel *m) {
 	m->nMesh = 0;
 	m->mesh  = NULL;
 
+    strcpy(m->file, strFile);
+
 	/*Parse File*/
 	char buf[BUF_SIZE]={0};
 	
