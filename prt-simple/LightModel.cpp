@@ -29,10 +29,10 @@ CLightModel::~CLightModel()
 
     transCoeff = NULL;
 
-    if (lightProbe.data)
+    /*if (lightProbe.data)
     {
         delete lightProbe.data;
-    }
+    }*/
 }
 
 CLightModel::CLightModel()
@@ -108,11 +108,7 @@ int CLightModel::setLightProbeFromFile(char *file)
     unsigned char *imgData=NULL;
     int w, h;
 
-    wchar_t wbuf[1024] = { 0 };
-
-    mbstowcs(wbuf, file, strlen(file));
-    
-    imgData = ImageLoader::LoadFile(wbuf, &w, &h);
+    imgData = ImageLoader::LoadFile(file, &w, &h);
 
     if (imgData == NULL)
         return -1;
@@ -165,10 +161,17 @@ void CLightModel::projectLight(tPixel3 **coeff)
         {
             castLightFromProbe(&color, &sample->cart);
 
-            cf[j].r += (color.r * sample->sh[j]) * scale;
-            cf[j].g += (color.g * sample->sh[j]) * scale;
-            cf[j].b += (color.b * sample->sh[j]) * scale;
+            cf[j].r += (color.r * sample->sh[j]);
+            cf[j].g += (color.g * sample->sh[j]);
+            cf[j].b += (color.b * sample->sh[j]);
         }
+    }
+
+    for (int i=0; i < nBands2; i++)
+    {
+        cf[i].r *= scale;
+        cf[i].g *= scale;
+        cf[i].b *= scale;
     }
 
     *coeff = cf;
@@ -262,6 +265,7 @@ void CLightModel::projectShadow(tPixel3 **coeff, int mIdx, int vIdx)
     int nSamples = shSampler.getNumberSamples();
 
     float costerm = 0.0f;
+    float scale = (4.0*PI) / (float)nSamples;
 
     cf = new tPixel3[nBands*nBands + 1];
 
@@ -289,6 +293,13 @@ void CLightModel::projectShadow(tPixel3 **coeff, int mIdx, int vIdx)
         }
     }
 
+    for (int i = 0; i < nBands2; i++)
+    {
+        cf[i].r *= scale;
+        cf[i].g *= scale;
+        cf[i].b *= scale;
+    }
+
     *coeff = cf;
 }
 
@@ -302,17 +313,13 @@ void CLightModel::computeTransferCoefficients()
         for (j = 0; j < geometry->mesh[i].nVertex; j++)
         {
             projectShadow(&transCoeff[i].coeff[j], i, j);
-          //  printf("Transfer Function calculated in %d (%d/%d) out of %d meshes\r\n",
-          //      i, j, geometry->mesh[i].nVertex,geometry->nMesh);
         }
     }
-
-    //printf("\n");
 }
 
 int CLightModel::computeCoefficients()
 {
-    shSampler.setNumberSamples(64, nBands);
+    shSampler.setNumberSamples(225, nBands);
 
     shSampler.calculateSamples();
 
@@ -323,31 +330,19 @@ int CLightModel::computeCoefficients()
     return 0;
 }
 
-void CLightModel::evaluatePRT(tPixel3 *p, int mIdx, int v0, int v1, int v2)
+void CLightModel::evaluatePRT(tPixel3 *p, int mIdx, int vIdx)
 {
     int nBands2 = nBands * nBands;
 
-    memset(p, 0, sizeof(tPixel3) * 3);
+    memset(p, 0, sizeof(tPixel3));
 
     for (int i = 0; i < nBands2; i++)
     {
-        p[0].r += (lightCoeff[mIdx].coeff[0][i].r *
-                   transCoeff[mIdx].coeff[v0][i].r);
-        p[0].g += (lightCoeff[mIdx].coeff[0][i].g *
-                   transCoeff[mIdx].coeff[v0][i].g);
-        p[0].b += (lightCoeff[mIdx].coeff[0][i].b *
-                   transCoeff[mIdx].coeff[v0][i].b);
-        p[1].r += (lightCoeff[mIdx].coeff[0][i].r *
-                   transCoeff[mIdx].coeff[v1][i].r);
-        p[1].g += (lightCoeff[mIdx].coeff[0][i].g *
-                   transCoeff[mIdx].coeff[v1][i].g);
-        p[1].b += (lightCoeff[mIdx].coeff[0][i].b *
-                   transCoeff[mIdx].coeff[v1][i].b);
-        p[2].r += (lightCoeff[mIdx].coeff[0][i].r *
-                   transCoeff[mIdx].coeff[v2][i].r);
-        p[2].g += (lightCoeff[mIdx].coeff[0][i].g *
-                   transCoeff[mIdx].coeff[v2][i].g);
-        p[2].b += (lightCoeff[mIdx].coeff[0][i].b *
-                   transCoeff[mIdx].coeff[v2][i].b);
+        p->r += (lightCoeff[mIdx].coeff[0][i].r *
+                 transCoeff[mIdx].coeff[vIdx][i].r);
+        p->g += (lightCoeff[mIdx].coeff[0][i].g *
+                 transCoeff[mIdx].coeff[vIdx][i].g);
+        p->b += (lightCoeff[mIdx].coeff[0][i].b *
+                 transCoeff[mIdx].coeff[vIdx][i].b);
     }
 }

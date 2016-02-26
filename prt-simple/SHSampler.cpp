@@ -134,12 +134,13 @@ void CSHSampler::calculateSH(float **sh, Point2D *uSphere)
     for (int l = 0; l < nBands; l++)
         for (int m = -l; m <= l; m++)
         {
+            shCnt = l*(l+1)+m;
             (*sh)[shCnt] = SH(l, m, uSphere->x, uSphere->y);
         }
-
 }
 
-#define real_rand() (float)((rand()%10000)/10000.0f)
+#define real_rand() ((float)rand()/RAND_MAX)
+
 void CSHSampler::calculateSamples()
 {
     Point2D cell, uSphere;

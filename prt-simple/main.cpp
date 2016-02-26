@@ -137,22 +137,24 @@ void Render() {
 
         glBegin(GL_TRIANGLES);
         for (int i = 0; i < Mesh.nIndex; i += 3) {
-            tPixel3 c[3] = { 0 };
+            tPixel3 c = {0};
 
-            light.evaluatePRT(c, j, Mesh.index[i], Mesh.index[i+1], Mesh.index[i+2]);
+            light.evaluatePRT(&c, j, Mesh.index[i]);
             Vertex = Mesh.vertex[Mesh.index[i]];
             glNormal3f(Vertex.n.x, Vertex.n.y, Vertex.n.z);
-            glColor3f(c[0].r, c[0].g, c[0].b);
+            glColor3f(c.r, c.g, c.b);
             glVertex3f(Vertex.p.x, Vertex.p.y, Vertex.p.z);
 
             Vertex = Mesh.vertex[Mesh.index[i + 1]];
+            light.evaluatePRT(&c, j, Mesh.index[i+1]);
             glNormal3f(Vertex.n.x, Vertex.n.y, Vertex.n.z);
-            glColor3f(c[1].r, c[1].g, c[1].b);
+            glColor3f(c.r, c.g, c.b);
             glVertex3f(Vertex.p.x, Vertex.p.y, Vertex.p.z);
 
             Vertex = Mesh.vertex[Mesh.index[i + 2]];
+            light.evaluatePRT(&c, j, Mesh.index[i+2]);
             glNormal3f(Vertex.n.x, Vertex.n.y, Vertex.n.z);
-            glColor3f(c[2].r, c[2].g, c[2].b);
+            glColor3f(c.r, c.g, c.b);
             glVertex3f(Vertex.p.x, Vertex.p.y, Vertex.p.z);
         }
 
@@ -399,13 +401,15 @@ int main(int argc, char *argv[]) {
     glewInit();
     SetCameraInitialPos();
 
-/*    if (LoadModel("spider.irrmesh", &model))
+    /*if (LoadModel("spider.irrmesh", &model))
         if (LoadModel("models/spider.irrmesh", &model))
             if (LoadModel("../models/spider.irrmesh", &model))*/
-
-    if (LoadModel("ncasti.txt", &model))
+    if (LoadModel("cellar.irrmesh", &model))
+                    if (LoadModel("models/cellar.irrmesh", &model))
+                        if (LoadModel("../models/cellar.irrmesh", &model))
+   /* if (LoadModel("ncasti.txt", &model))
         if (LoadModel("models/castillo/ncasti.txt", &model))
-            if (LoadModel("../models/castillo/ncasti.txt", &model))
+            if (LoadModel("../models/castillo/ncasti.txt", &model))*/
                 printf("Failed to load model\n");
 
     /* Setting the light model */

@@ -47,12 +47,8 @@ int AddTexture(tModel *m, char *file) {
 	m->nTex++;
 	m->tex = (tTexture *)realloc(m->tex, sizeof(tTexture) * m->nTex);
 
-	wchar_t wbuf[1024]={0};
-
-	mbstowcs(wbuf, file, strlen(file));
-	
 	strcpy(m->tex[i].file, file);
-	m->tex[i].data = ImageLoader::LoadFile(wbuf, &m->tex[i].width, &m->tex[i].height);
+	m->tex[i].data = ImageLoader::LoadFile(file, &m->tex[i].width, &m->tex[i].height);
 
 	return i;
 }

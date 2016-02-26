@@ -54,5 +54,5 @@ public:
 
     int  computeCoefficients();
 
-    void evaluatePRT(tPixel3 *p, int mIdx, int v0, int v1, int v2);
+    void evaluatePRT(tPixel3 *p, int mIdx, int vIdx);
 };
