@@ -13,10 +13,6 @@ typedef struct {
 class CLightModel
 {
 private:
-    int nBands;
-    int nBands2;
-    int nSamples;
-
     tLightProbe lightProbe;
 
     tModel      *geometry;
@@ -45,7 +41,7 @@ private:
     void computeLightCoefficients();
 
     void computeTransferCoefficients();
-
+    
     bool loadTranferCoefficients();
 
     bool saveTransferCoefficients();
@@ -69,4 +65,8 @@ public:
     void setProgressCbk(void(*)(char *));
 
     void finish();
+
+    int nBands;
+    int nBands2;
+    int nSamples;
 };

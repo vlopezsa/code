@@ -78,13 +78,13 @@ int factorial(int x)
     return res;
 }
 
-float K(int l, int m)
+double K(int l, int m)
 {
     double temp = ((2.0*l + 1.0)*factorial(l - m)) / (4.0*PI*factorial(l + m));
-    return (float)sqrt(temp);
+    return sqrt(temp);
 }
 
-float P(int l, int m, float x)
+double P(int l, int m, float x)
 {
     float pmm = 1.0;
 
@@ -108,14 +108,14 @@ float P(int l, int m, float x)
     return pll;
 }
 
-float SH(int l, int m, float theta, float phi)
+double SH(int l, int m, float theta, float phi)
 {
-    float res = 0.0f;
+    double res = 0.0f;
 
     if (m == 0)
         res = K(l, 0) * P(l, 0, cos(theta));
     else if (m < 0)
-        res = sqrt_2*K(l, m)*sin(-m*phi)*P(l, -m, cos(theta));
+        res = sqrt_2*K(l,-m)*sin(-m*phi)*P(l, -m, cos(theta));
     else
         res = sqrt_2*K(l, m)*cos(m*phi)*P(l, m, cos(theta));
 
@@ -135,7 +135,7 @@ void CSHSampler::calculateSH(float **sh, glVector *uSphere)
         for (int m = -l; m <= l; m++)
         {
             shCnt = l*(l+1)+m;
-            (*sh)[shCnt] = SH(l, m, uSphere->x, uSphere->y);
+            (*sh)[shCnt] = (float)SH(l, m, uSphere->x, uSphere->y);
         }
 }
 

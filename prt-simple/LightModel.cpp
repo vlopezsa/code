@@ -146,8 +146,9 @@ void CLightModel::castLightFromProbe(glVector *color, glVector *dir)
 
     /*if(dir->y > -0.5f && dir->x > -0.50f &&
        dir->y <  0.5f && dir->x <  0.50f)*/
-    if(dir->x > -0.5f/* && dir->z > -0.50f*/ &&
-       dir->x <  0.5f/* && dir->z <  0.50f*/)
+    //if(dir->z > -0.5f && dir->x > -0.50f &&
+    //   dir->z <  0.5f && dir->x <  0.50f)
+    if(dir->y > 0.0f && dir->x > 0.0f)
     {
             color->r = color->g = color->b = 1.0f;
     }
@@ -182,8 +183,6 @@ void CLightModel::projectLight(glVector *coeff)
     float scale = (4.0*PI) / (float)nSamples;
 
     cf = coeff;
-
-    //memset(cf, 0, sizeof(glVector)*(nBands2));
 
     for (int i=0; i < nSamples; i++)
     {
@@ -263,7 +262,7 @@ bool CLightModel::Visibility(int vIdx, int mIdx, glVector *dir)
         for (int j = 0; j < geometry->mesh[i].nIndex; j+=3)
         {
             unsigned int t = geometry->mesh[i].index[j];
-            if ((baset != t) && (baset!= t+1) && (baset != t+2))
+            //if ((vIdx != t) && (vIdx!= t+1) && (vIdx!=t+2))
             {
                 glVector v0 = geometry->mesh[i].vertex[t+0].p;
                 glVector v1 = geometry->mesh[i].vertex[t+1].p;
@@ -297,15 +296,17 @@ void CLightModel::projectShadow(glVector *coeff, int mIdx, int vIdx)
             costerm = dot(glVector(geometry->mesh[mIdx].vertex[vIdx].n),
                  glVector(sample->cart));
 
-            if(costerm>0.0f)
+            if (costerm > 0.0f)
+            {
                 for (int j = 0; j < nBands2; j++)
                 {
-/*                    color.r = ((geometry->mesh[mIdx].vertex[vIdx].c >> 16) & 0xFF) / 255.0f;
-                    color.g = ((geometry->mesh[mIdx].vertex[vIdx].c >>  8) & 0xFF) / 255.0f;
-                    color.b = ( geometry->mesh[mIdx].vertex[vIdx].c        & 0xFF) / 255.0f;*/
+                    /*color.r = ((geometry->mesh[mIdx].vertex[vIdx].c >> 16) & 0xFF) / 255.0f;
+                      color.g = ((geometry->mesh[mIdx].vertex[vIdx].c >>  8) & 0xFF) / 255.0f;
+                      color.b = ( geometry->mesh[mIdx].vertex[vIdx].c        & 0xFF) / 255.0f;*/
 
-                    cf[j] += sample->sh[j] * costerm;
+                    cf[j] += (sample->sh[j] * costerm);
                 }
+            }
         }
     }
 
@@ -408,34 +409,41 @@ int CLightModel::computeCoefficients(int samples, int bands, bool force)
     }
 
     updateProgress("All Coefficients", 100.0f);
-
+    
     return 0;
 }
 
 void CLightModel::evaluatePRT(tPixel3 *p, int mIdx, int vIdx)
 {
-    //memset(p, 0, sizeof(tPixel3));
     glVector r;
 
     for (int i = 0; i < nBands2; i++)
     {
-        r += lightCoeff[i].r * transCoeff[mIdx][vIdx][i].r;
+        r.r += (lightCoeff[i].r * transCoeff[mIdx][vIdx][i].r);
+        r.g += (lightCoeff[i].g * transCoeff[mIdx][vIdx][i].g);
+        r.b += (lightCoeff[i].b * transCoeff[mIdx][vIdx][i].b);
     }
 
     /*p->r = transCoeff[mIdx][vIdx][0].r;
     p->g = transCoeff[mIdx][vIdx][0].g;
     p->b = transCoeff[mIdx][vIdx][0].b;*/
-    /*p->r = r.x / (float)nBands2;
-    p->g = r.y / (float)nBands2;
-    p->b = r.z / (float)nBands2;*/
+    /* p->r = r.x * colorScale.r;
+     p->g = r.y * colorScale.g;
+     p->b = r.z * colorScale.b;*/
+
+    //r += colorMin;
+
+    p->r = r.x;
+    p->g = r.y;
+    p->b = r.z;
 
     /*p->r = transCoeff[mIdx][vIdx][0].r;
     p->g = transCoeff[mIdx][vIdx][0].g;
     p->b = transCoeff[mIdx][vIdx][0].b;*/
 
-    p->r = lightCoeff[0].r;
+    /*p->r = lightCoeff[0].r;
     p->g = lightCoeff[0].g;
-    p->b = lightCoeff[0].b;
+    p->b = lightCoeff[0].b;*/
 
 }
 

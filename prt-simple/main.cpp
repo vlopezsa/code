@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <GL\glew.h>
 #include <GL\glut.h>
+#include <AntTweakBar.h>
 
 #include <iostream>
 #include <math.h>
@@ -11,6 +12,8 @@
 #include "ModelLoader.h"
 #include "glCamera.h"
 #include "LightModel.h"
+
+
 
 //Camera
 glCamera Cam;
@@ -91,6 +94,7 @@ void EndProgram() {
     light.finish();
     ReleaseModel(&model);
     ImageLoader::Close();
+    TwTerminate();
     glutDestroyWindow(MainWinId);
     exit(0);
 }
@@ -172,6 +176,8 @@ void Render() {
 
     glUseProgram(0);
 
+    TwDraw();
+
     glutSwapBuffers();
 }
 
@@ -190,6 +196,8 @@ void ChangeSize(GLsizei w, GLsizei h) {
 
     gluPerspective(40.0, (GLdouble)w / (GLdouble)h, 0.6, 20000.0);
     glMatrixMode(GL_MODELVIEW);
+
+    TwWindowSize(w, h);
 }
 
 
@@ -231,6 +239,8 @@ void KeyEvent(unsigned char key, int x, int y)
         SetCameraInitialPos();
         break;
     }
+
+    TwEventKeyboardGLUT(key, x, y);
 }
 
 void MouseFunc(int button, int state, int x, int y)
@@ -246,12 +256,16 @@ void MouseFunc(int button, int state, int x, int y)
     {
         MouseDown = false;
     }
+
+    TwEventMouseButtonGLUT(button, state, x, y);
 }
 
 void MotionFunc(int x, int y)
 {
     CurMouseX = x;
     CurMouseY = y;
+
+    TwEventMouseMotionGLUT(x, y);
 }
 
 void IdleFunc()
@@ -406,6 +420,12 @@ int main(int argc, char *argv[]) {
 
     ImageLoader::Init();
     glewInit();
+    TwInit(TW_OPENGL, NULL);
+    
+    TwBar *bar = TwNewBar("Info & Options");
+    TwDefine(" GLOBAL help='PRT Simple Example' "); 
+    TwDefine(" TweakBar size='200 200' color='96 216 224' ");
+    
     SetCameraInitialPos();
 
     LoadModel(&model);
@@ -420,7 +440,12 @@ int main(int argc, char *argv[]) {
             printf("Couldn't load light probe file\n");
 
     /* Pre calculate light coefficients */
-    light.computeCoefficients(10*10, 5, false);
+    light.computeCoefficients(8*8, 4, false);
+
+    TwAddVarRO(bar, "NumSamples", TW_TYPE_UINT32, &light.nSamples,
+        " label='Number of samples' help='Number of samples used in Monte Carlo integration.' ");
+    TwAddVarRO(bar, "NumBands", TW_TYPE_UINT32, &light.nBands,
+        " label='Number of bands' help='Number of bands used to calculate the spherical harmonics' ");
 
     LoadShaderEngine();
 
@@ -449,7 +474,11 @@ int main(int argc, char *argv[]) {
     glutKeyboardFunc(KeyEvent);
     glutMouseFunc(MouseFunc);
     glutMotionFunc(MotionFunc);
+    glutPassiveMotionFunc(MotionFunc);
     glutIdleFunc(IdleFunc);
+    glutSpecialFunc((GLUTspecialfun)TwEventSpecialGLUT);
+
+    TwGLUTModifiersFunc(glutGetModifiers);
 
     glutMainLoop();
     return 0;
