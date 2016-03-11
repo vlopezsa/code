@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <iomanip>
 
 #include "LightModel.h"
 
@@ -12,6 +16,8 @@
 #ifndef PI
 #define PI			3.14159265358979323846
 #endif
+
+using namespace std;
 
 CLightModel::~CLightModel()
 {
@@ -31,6 +37,8 @@ CLightModel::CLightModel()
     lightCoeff = NULL;
 
     transCoeff = NULL;
+
+    progresCbk = NULL;
 }
 
 void CLightModel::setGeometry(tModel *model)
@@ -52,17 +60,17 @@ void CLightModel::allocateMemory()
         return;
 
     // Light SH Functions
-    lightCoeff = new tPixel3[nBands2];
+    lightCoeff = new glVector[nBands2];
 
     // Transport coefficients
-    transCoeff = new tPixel3**[geometry->nMesh];
+    transCoeff = new glVector**[geometry->nMesh];
 
     for (int i = 0; i < geometry->nMesh; i++)
     {
-        transCoeff[i] = new tPixel3*[geometry->mesh[i].nVertex];
+        transCoeff[i] = new glVector*[geometry->mesh[i].nVertex];
         for (int j = 0; j < geometry->mesh[i].nVertex; j++)
         {
-            transCoeff[i][j] = new tPixel3[nBands2];
+            transCoeff[i][j] = new glVector[nBands2];
         }
     }
 }
@@ -115,20 +123,33 @@ int CLightModel::setLightProbeFromFile(char *file)
     return setLightProbe(imgData, w, h);
 }
 
-void CLightModel::castLightFromProbe(tPixel3 *color, Point3D *dir)
+/*void CLightModel::castLightFromProbe(glVector *color, Point2D *dir)
 {
-    float d, r;
-    Point2D tex;
-    int pxCoord[2];
-    int pxIdx;
-
-    if (dir->z > 0.0f && dir->x>0.0f)
+   // if (dir->x>(PI/16))
     {
         color->r = color->g = color->b = 1.0f;
     }
     else
     {
         color->r = color->g = color->b = 0.0f;
+    }
+}*/
+
+void CLightModel::castLightFromProbe(glVector *color, glVector *dir)
+{
+    float d, r;
+    Point2D tex;
+    int pxCoord[2];
+    int pxIdx;
+
+    color->r = color->g = color->b = 0.0f;
+
+    /*if(dir->y > -0.5f && dir->x > -0.50f &&
+       dir->y <  0.5f && dir->x <  0.50f)*/
+    if(dir->x > -0.5f/* && dir->z > -0.50f*/ &&
+       dir->x <  0.5f/* && dir->z <  0.50f*/)
+    {
+            color->r = color->g = color->b = 1.0f;
     }
 
     return;
@@ -150,10 +171,10 @@ void CLightModel::castLightFromProbe(tPixel3 *color, Point3D *dir)
     color->b = lightProbe.data[pxIdx+2];
 }
 
-void CLightModel::projectLight(tPixel3 *coeff)
+void CLightModel::projectLight(glVector *coeff)
 {
-    tPixel3 *cf;
-    tPixel3 color;
+    glVector *cf;
+    glVector color;
 
     int nBands2 = nBands * nBands;
     int nSamples = shSampler.getNumberSamples();
@@ -162,13 +183,14 @@ void CLightModel::projectLight(tPixel3 *coeff)
 
     cf = coeff;
 
-    memset(cf, 0, sizeof(tPixel3)*(nBands2));
+    //memset(cf, 0, sizeof(glVector)*(nBands2));
 
     for (int i=0; i < nSamples; i++)
     {
         tSphereSample *sample = shSampler.getSample(i);
 
         castLightFromProbe(&color, &sample->cart);
+        //castLightFromProbe(&color, &sample->sphr);
         for (int j = 0; j < nBands2; j++)
         {
             cf[j].r += (color.r * sample->sh[j]);
@@ -190,83 +212,81 @@ void CLightModel::computeLightCoefficients()
     projectLight(lightCoeff);
 }
 
-void cross(float *o, float *v1, float *v2)
+bool RayIntersectsTriangle(glVector *p, glVector *d,
+    glVector* v0, glVector* v1, glVector* v2)
 {
-    o[0] = v1[1] * v2[2] - v1[2] * v2[1];
-    o[1] = v1[2] * v2[0] - v1[0] * v2[2];
-    o[2] = v1[0] * v2[1] - v1[1] * v2[0];
-}
+    glVector e1, e2, p1, i1, t1, q1;
+    float det = 0.0f;
 
-float dot(float *v1, float *v2)
-{
-    return	v1[0] * v2[0] +
-        v1[1] * v2[1] +
-        v1[2] * v2[2];
-}
+    e1 = *v1 - *v0;
+    e2 = *v2 - *v1;
 
-bool RayIntersectsTriangle(Point3D *p, Point3D *d,
-    Point3D* v0, Point3D* v1, Point3D* v2)
-{
-    float e1[3] = { v1->x-v0->x, v1->y - v0->y, v1->z - v0->z };
-    float e2[3] = { v2->x-v0->x, v2->y - v0->y, v2->z - v0->z };
-    float h[3];
-    cross(h, (float *)d, e2);
-    float a = dot(e1, h);
-    if (a > -0.00001f && a < 0.00001f)
-        return(false);
-    float f = 1.0f / a;
-    float s[3] = { p->x - v0->x, p->y - v0->y, p->z - v0->z };
-    float u = f * dot(s, h);
-    if (u < 0.0f || u > 1.0f)
-        return(false);
-    float q[3];
-    cross(q, s, e1);
-    float v = f * dot((float *)d, q);
-    if (v < 0.0f || u + v > 1.0f)
-        return(false);
-    float t = dot(e2, q)*f;
-    if (t < 0.0f)
-        return(false);
-    return(true);
-}
+    p1 = cross(*d, e2);
 
-bool CLightModel::Visibility(int vIdx, int mIdx, Point3D *dir)
+    float a = dot(e1, p1);
+
+    if (a > -0.00001 && a < 0.00001)
+        return false;
+
+    det = 1.0f / a;
+
+    t1 = *d - *v0;
+
+    i1.x = dot(t1, p1)*det;
+
+    if (i1.x < 0.0f || i1.x > 1.0f)
+        return false;
+
+    q1 = cross(t1, e1);
+    
+    i1.y = dot(*d, q1)*det;
+
+    if (i1.y < 0.0f || (i1.x + i1.y) > 1.0f)
+        return false;
+
+    i1.z = dot(e2, q1)*det;
+
+    if (i1.z > 0.00001f)
+        return true;
+
+    return false;
+}
+bool CLightModel::Visibility(int vIdx, int mIdx, glVector *dir)
 {
     bool visible(true);
+    int baset = (vIdx / 3) * 3;
 
-    Point3D &p = geometry->mesh[mIdx].vertex[vIdx].p;
+    glVector p = geometry->mesh[mIdx].vertex[vIdx].p;
 
     for (int i = 0; i < geometry->nMesh; i++)
     {
         for (int j = 0; j < geometry->mesh[i].nIndex; j+=3)
         {
-            unsigned int &t = geometry->mesh[i].index[j];
-            if ((vIdx != t) && (vIdx!= t+1) && (vIdx != t+2) &&(i!=mIdx))
+            unsigned int t = geometry->mesh[i].index[j];
+            if ((baset != t) && (baset!= t+1) && (baset != t+2))
             {
-                Point3D& v0 = geometry->mesh[i].vertex[t+0].p;
-                Point3D& v1 = geometry->mesh[i].vertex[t+1].p;
-                Point3D& v2 = geometry->mesh[i].vertex[t+2].p;
+                glVector v0 = geometry->mesh[i].vertex[t+0].p;
+                glVector v1 = geometry->mesh[i].vertex[t+1].p;
+                glVector v2 = geometry->mesh[i].vertex[t+2].p;
                 visible = !RayIntersectsTriangle(&p, dir, &v0, &v1, &v2);
                 if (!visible)
-                    break;
+                    return false;
             }
         }
     }
     
-    return(visible);
+    return true;
 }
 
-void CLightModel::projectShadow(tPixel3 *coeff, int mIdx, int vIdx)
+void CLightModel::projectShadow(glVector *coeff, int mIdx, int vIdx)
 {
-    tPixel3 *cf;
-    tPixel3 color;
+    glVector *cf;
+    glVector color;
 
     float costerm = 0.0f;
     float scale = (4.0*PI) / (float)nSamples;
 
     cf = coeff;
-
-    memset(cf, 0, sizeof(tPixel3)*(nBands2));
 
     for (int i = 0; i < nSamples; i++)
     {
@@ -274,45 +294,75 @@ void CLightModel::projectShadow(tPixel3 *coeff, int mIdx, int vIdx)
             
         if (Visibility(vIdx, mIdx, &sample->cart))
         {
-            costerm = dot((float *)&geometry->mesh[mIdx].vertex[vIdx].n,
-                 (float *)&sample->cart);
+            costerm = dot(glVector(geometry->mesh[mIdx].vertex[vIdx].n),
+                 glVector(sample->cart));
 
             if(costerm>0.0f)
                 for (int j = 0; j < nBands2; j++)
                 {
-                    color.r = ((geometry->mesh[mIdx].vertex[vIdx].c >> 16) & 0xFF) / 255.0f;
+/*                    color.r = ((geometry->mesh[mIdx].vertex[vIdx].c >> 16) & 0xFF) / 255.0f;
                     color.g = ((geometry->mesh[mIdx].vertex[vIdx].c >>  8) & 0xFF) / 255.0f;
-                    color.b = ( geometry->mesh[mIdx].vertex[vIdx].c        & 0xFF) / 255.0f;
+                    color.b = ( geometry->mesh[mIdx].vertex[vIdx].c        & 0xFF) / 255.0f;*/
 
-                    /*cf[j].r += (color.r * sample->sh[j]) * costerm;
-                    cf[j].g += (color.g * sample->sh[j]) * costerm;
-                    cf[j].b += (color.b * sample->sh[j]) * costerm;*/
-
-                    cf[j].r += sample->sh[j] * costerm;
-                    cf[j].g += sample->sh[j] * costerm;
-                    cf[j].b += sample->sh[j] * costerm;
+                    cf[j] += sample->sh[j] * costerm;
                 }
         }
     }
 
     for (int i = 0; i < nBands2; i++)
     {
-        cf[i].r *= scale;
-        cf[i].g *= scale;
-        cf[i].b *= scale;
+        cf[i] *= scale;
     }
 }
 
+#include <thread>
+#include <vector>
+
+/*void CLightModel::projectShadowRange(glVector *coeff, int mIdx, int vIdx_Start, int vIdx_End)
+{
+    int j;
+
+    for (j = vIdx_Start; j < vIdx_End; j++)
+    {
+        projectShadow(coeff, mIdx, j);
+    }
+   
+}*/
 
 void CLightModel::computeTransferCoefficients()
 {
     int i, j;
 
+    float tt = 1.0f / geometry->nMesh;
+
     for (i = 0; i < geometry->nMesh; i++)
     {
+        updateProgress("Transfer Coefficients - Calculating", tt * (float)i * 100.0f);
+
+        /*int split = (int)((float)(geometry->mesh[i].nVertex) / 8);
+        vector<thread> t;
+        
+        for (j = 0; j < 7; j++)
+            t.push_back(thread(&CLightModel::projectShadowRange, this, transCoeff[i][split*j], i, split*j, (split*j) + split));
+
+        t.push_back(thread(&CLightModel::projectShadowRange, this, transCoeff[i][split*j], i, split*j, geometry->mesh[i].nVertex));
+
+        for (j = 0; j < 8; j++)
+            t[j].join();*/
+
+        
+        float tpm = 1.0f / geometry->mesh[i].nVertex*100.0f;
         for (j = 0; j < geometry->mesh[i].nVertex; j++)
         {
             projectShadow(transCoeff[i][j], i, j);
+
+            if (i == 0 && j == 0)
+                printf("%f %f %f\n", transCoeff[0][0][0].x, transCoeff[0][0][0].y, transCoeff[0][0][0].z);
+
+            if (j % 100 == 0)
+            {                
+                updateProgress("Transfer Coefficients - Calculating", tpm*(float)j);
+            }
         }
     }
 }
@@ -320,7 +370,12 @@ void CLightModel::computeTransferCoefficients()
 int CLightModel::computeCoefficients(int samples, int bands, bool force)
 {
     shSampler.setNumberSamples(samples, bands);
+
+    updateProgress("Samples", 0.0f);
+
     shSampler.calculateSamples();
+
+    updateProgress("Samples", 100.0f);
 
     if (!geometry)
         return -1;
@@ -329,14 +384,22 @@ int CLightModel::computeCoefficients(int samples, int bands, bool force)
     nBands = shSampler.getNumberBands();
     nBands2 = nBands*nBands;
 
+    updateProgress("Memory Allocation", 0.0f);
     allocateMemory();
+    updateProgress("Memory Allocation", 100.0f);
 
+    updateProgress("Light Coefficients", 0.0f);
     computeLightCoefficients();
+    updateProgress("Light Coefficients", 100.0f);
 
     if (force == true)
     {
+        updateProgress("Transfer Coefficients", 0.0f);
         computeTransferCoefficients();
+        printf("%f %f %f\n", transCoeff[0][0][0].x, transCoeff[0][0][0].y, transCoeff[0][0][0].z);
+        updateProgress("Transfer Coefficients - Saving", 0.0f);
         saveTransferCoefficients();
+        updateProgress("Transfer Coefficients - Saving", 100.0f);
     }
     else if (loadTranferCoefficients()==false)
     {
@@ -344,22 +407,36 @@ int CLightModel::computeCoefficients(int samples, int bands, bool force)
         saveTransferCoefficients();
     }
 
+    updateProgress("All Coefficients", 100.0f);
+
     return 0;
 }
 
 void CLightModel::evaluatePRT(tPixel3 *p, int mIdx, int vIdx)
 {
-    memset(p, 0, sizeof(tPixel3));
+    //memset(p, 0, sizeof(tPixel3));
+    glVector r;
 
     for (int i = 0; i < nBands2; i++)
     {
-        p->r += (lightCoeff[i].r *
-                 transCoeff[mIdx][vIdx][i].r);
-        p->g += (lightCoeff[i].g *
-                 transCoeff[mIdx][vIdx][i].g);
-        p->b += (lightCoeff[i].b *
-                 transCoeff[mIdx][vIdx][i].b);
+        r += lightCoeff[i].r * transCoeff[mIdx][vIdx][i].r;
     }
+
+    /*p->r = transCoeff[mIdx][vIdx][0].r;
+    p->g = transCoeff[mIdx][vIdx][0].g;
+    p->b = transCoeff[mIdx][vIdx][0].b;*/
+    /*p->r = r.x / (float)nBands2;
+    p->g = r.y / (float)nBands2;
+    p->b = r.z / (float)nBands2;*/
+
+    /*p->r = transCoeff[mIdx][vIdx][0].r;
+    p->g = transCoeff[mIdx][vIdx][0].g;
+    p->b = transCoeff[mIdx][vIdx][0].b;*/
+
+    p->r = lightCoeff[0].r;
+    p->g = lightCoeff[0].g;
+    p->b = lightCoeff[0].b;
+
 }
 
 bool CLightModel::loadTranferCoefficients()
@@ -395,20 +472,16 @@ bool CLightModel::loadTranferCoefficients()
 
     size_t k, rsize;
 
-    rsize = sizeof(tPixel3) * nBands2;
+    rsize = sizeof(glVector::x) * 3 * nBands2;
 
     for (i = 0; i < geometry->nMesh; i++)
     {
         for (j = 0; j < geometry->mesh[i].nVertex; j++)
         {
-            //k = 0;
-            //while (!ferror(f) && !feof(f) && k < rsize)
-            //{
-                //k += fread(&(transCoeff[i].coeff[j])+k, sizeof(tPixel3), nBands2, f);
-
-                for (k = 0; k < nBands2; k++)
-                    fread(&transCoeff[i][j][k], sizeof(tPixel3), 1, f);
-            //}
+            for (k = 0; k < nBands2; k++)
+            {
+                fread(&transCoeff[i][j][k].d[0], sizeof(glVector::x)*3, 1, f);
+            }
         }
     }
 
@@ -448,7 +521,7 @@ bool CLightModel::saveTransferCoefficients()
 
     size_t k, rsize;
 
-    rsize = sizeof(tPixel3) * nBands2;
+    rsize = sizeof(glVector::x) * 3 * nBands2;
 
     for (i = 0; i < geometry->nMesh; i++)
     {
@@ -456,11 +529,7 @@ bool CLightModel::saveTransferCoefficients()
         {
             k = 0;
             for (k = 0; k < nBands2 && !ferror(f); k++)
-                fwrite(&transCoeff[i][j][k], sizeof(tPixel3), 1, f);
-            //while (!ferror(f) && k < rsize)
-            //{
-                //k += fwrite(&transCoeff[i].coeff[j]+k, sizeof(tPixel3), nBands2, f);
-            //}
+                fwrite(&transCoeff[i][j][k].d[0], sizeof(glVector::x)*3, 1, f);
         }
     }
 
@@ -474,4 +543,22 @@ bool CLightModel::saveTransferCoefficients()
     fclose(f);
 
     return true;
+}
+
+void CLightModel::setProgressCbk(void(*f)(char *))
+{
+    if (f)
+        progresCbk = f;
+}
+
+void CLightModel::updateProgress(char *phase, float percent)
+{
+    if (!progresCbk)
+        return;
+
+    stringstream ss;
+
+    ss << phase << " : " << percent << "%";
+
+    progresCbk((char *)ss.str().c_str());
 }

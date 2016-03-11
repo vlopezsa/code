@@ -43,22 +43,22 @@ void glCamera::SetPrespective()
 	// Create a matrix from the pitch Quaternion and get the j vector 
 	// for our direction.
 	m_qPitch.CreateMatrix(Matrix);
-	m_DirectionVector.j = Matrix[9];
+	m_DirectionVector.y = Matrix[9];
 
 	// Combine the heading and pitch rotations and make a matrix to get
 	// the i and j vectors for our direction.
 	q = m_qHeading * m_qPitch;
 	q.CreateMatrix(Matrix);
-	m_DirectionVector.i = Matrix[8];
-	m_DirectionVector.k = Matrix[10];
+	m_DirectionVector.x = Matrix[8];
+	m_DirectionVector.z = Matrix[10];
 
 	// Scale the direction by our speed.
 	m_DirectionVector *= m_ForwardVelocity;
 
 	// Increment our position by the vector
-	m_Position.x += m_DirectionVector.i;
-	m_Position.y += m_DirectionVector.j;
-	m_Position.z += m_DirectionVector.k;
+	m_Position.x += m_DirectionVector.x;
+	m_Position.y += m_DirectionVector.y;
+	m_Position.z += m_DirectionVector.z;
 
 	// Translate to our new position.
 	glTranslatef(-m_Position.x, -m_Position.y, m_Position.z);

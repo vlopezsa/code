@@ -95,6 +95,12 @@ void EndProgram() {
     exit(0);
 }
 
+void SetProgressInfoCbk(char *info)
+{
+    glutSetWindowTitle(info);
+    //printf("%s\n", info);
+}
+
 void SetCameraInitialPos()
 {
     Cam.m_MaxForwardVelocity = 5.0f;
@@ -130,7 +136,7 @@ void Render() {
     glUseProgram(GlobalProgramObject);
 
     glPushMatrix();
-    glScalef(0.01f, 0.01f, 0.01f);
+    glScalef(1.0f, 1.0f, 1.0f);
     glEnable(GL_CULL_FACE);
 
     for (int j = 0; j<model.nMesh; j++) {
@@ -402,16 +408,9 @@ int main(int argc, char *argv[]) {
     glewInit();
     SetCameraInitialPos();
 
-    if (LoadModel("spider.irrmesh", &model))
-        if (LoadModel("models/spider.irrmesh", &model))
-            if (LoadModel("../models/spider.irrmesh", &model))
-   /* if (LoadModel("cellar.irrmesh", &model))
-                    if (LoadModel("models/cellar.irrmesh", &model))
-                        if (LoadModel("../models/cellar.irrmesh", &model))*/
-    /*if (LoadModel("ncasti.txt", &model))
-        if (LoadModel("models/castillo/ncasti.txt", &model))
-            if (LoadModel("../models/castillo/ncasti.txt", &model))*/
-                printf("Failed to load model\n");
+    LoadModel(&model);
+
+    light.setProgressCbk(&SetProgressInfoCbk);
 
     /* Setting the light model */
     light.setGeometry(&model);
@@ -421,7 +420,7 @@ int main(int argc, char *argv[]) {
             printf("Couldn't load light probe file\n");
 
     /* Pre calculate light coefficients */
-    light.computeCoefficients(1600, 2, false);
+    light.computeCoefficients(10*10, 5, false);
 
     LoadShaderEngine();
 
@@ -443,7 +442,7 @@ int main(int argc, char *argv[]) {
         CompileShader(FragmentShaderObject, FragmentShaderSource);
         LinkShader(GlobalProgramObject, FragmentShaderObject);
         free(FragmentShaderSource);
-    }
+    }    
 
     glutReshapeFunc(ChangeSize);
     glutDisplayFunc(Render);

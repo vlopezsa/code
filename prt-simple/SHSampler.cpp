@@ -122,7 +122,7 @@ float SH(int l, int m, float theta, float phi)
     return res;
 }
 
-void CSHSampler::calculateSH(float **sh, Point2D *uSphere)
+void CSHSampler::calculateSH(float **sh, glVector *uSphere)
 {
     int shCnt = 0;
 
@@ -143,8 +143,8 @@ void CSHSampler::calculateSH(float **sh, Point2D *uSphere)
 
 void CSHSampler::calculateSamples()
 {
-    Point2D cell, uSphere;
-    Point3D uCartesian;
+    glVector cell, uSphere;
+    glVector uCartesian;
     int sN;
     int sCnt; // sampler counter
 
@@ -158,8 +158,8 @@ void CSHSampler::calculateSamples()
     for (int i = 0; i < sN; i++)
         for (int j = 0; j < sN; j++)
         {
-            cell.x = (i + real_rand()) / sN;
-            cell.y = (j + real_rand()) / sN;
+            cell.x = ((float)i + real_rand()) / (float)sN;
+            cell.y = ((float)j + real_rand()) / (float)sN;
 
             uSphere.x = 2 * acos(sqrt(1.0f - cell.x));
             uSphere.y = 2 * PI * cell.y;

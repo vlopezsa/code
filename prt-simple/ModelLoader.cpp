@@ -223,7 +223,7 @@ void ComputeTangentSpace(tModel *Model)
 	}
 }
 
-int LoadModel(char *strFile, tModel *m) {
+int LoadModelEx(char *strFile, tModel *m) {
 	FILE *fmt;
 	int iSize = 0, i;
 	printf("Loading model %s...\n", strFile);
@@ -258,4 +258,102 @@ int LoadModel(char *strFile, tModel *m) {
 	printf("Tangent space computed.\n");
 
 	return 0;
+}
+
+#include <assimp\scene.h>
+#include <assimp\cimport.h>
+#include <assimp\postprocess.h>
+
+void convertAIMesh(const aiMesh *mesh, tMesh *m)
+{
+    m->nVertex = mesh->mNumVertices;
+    m->nIndex = mesh->mNumFaces * 3;
+
+    m->vertex = (tVertex *)malloc(sizeof(tVertex)*m->nVertex);
+    m->index = (unsigned int *)malloc(sizeof(int)*m->nIndex);
+
+    memset(m->vertex, 0, sizeof(tVertex)*m->nVertex);
+    memset(m->index, 0, sizeof(unsigned int)*m->nIndex);
+
+    for (int j = 0; j < mesh->mNumVertices; j++)
+    {
+        m->vertex[j].p.x = mesh->mVertices[j].x;
+        m->vertex[j].p.y = mesh->mVertices[j].y;
+        m->vertex[j].p.z = mesh->mVertices[j].z;
+
+        m->vertex[j].n.x = mesh->mNormals[j].x;
+        m->vertex[j].n.y = mesh->mNormals[j].y;
+        m->vertex[j].n.z = mesh->mNormals[j].z;
+    }
+
+    int k = 0;
+    for (int j = 0; j < mesh->mNumFaces; j++)
+    {
+        m->index[k++] = mesh->mFaces[j].mIndices[0];
+        m->index[k++] = mesh->mFaces[j].mIndices[1];
+        m->index[k++] = mesh->mFaces[j].mIndices[2];
+    }
+}
+
+int LoadModel(char *fileName, tModel *t)
+{
+    const aiScene *pScene;
+    int i, j, k;
+
+    pScene = aiImportFile(fileName, 
+        aiProcess_Triangulate |
+        aiProcess_GenNormals |
+        aiProcess_GenSmoothNormals |
+        aiProcess_PreTransformVertices
+        );
+
+    if (!pScene)
+        return -1;
+
+    t->nMesh = pScene->mNumMeshes;
+
+    t->nTex = 0;
+    t->tex = NULL;
+    strcpy(t->file, fileName);
+
+    t->mesh = (tMesh *)malloc(sizeof(tMesh) * (t->nMesh));
+    memset(t->mesh, 0, sizeof(tMesh)*(t->nMesh));
+
+    for (i = 0; i < t->nMesh; i++)
+    {
+        const aiMesh *mesh = pScene->mMeshes[i];
+        convertAIMesh(mesh, &t->mesh[i]);
+    }
+
+    aiReleaseImport(pScene);
+
+    return 0;
+}
+
+#include <windows.h>
+
+int LoadModel(tModel *m)
+{
+    wchar_t filename[1024] = { 0 };
+    char buf[1024] = { 0 };
+    OPENFILENAME of;
+
+    memset(&of, 0, sizeof(of));
+
+    of.lStructSize = sizeof(OPENFILENAME);
+    of.hwndOwner = NULL;
+    of.hInstance = GetModuleHandle(NULL);
+    of.lpstrFilter = L"*.*\0\0";
+    of.lpstrFile = filename;
+    of.nMaxFile = 256;
+    of.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_LONGNAMES;
+    of.lpstrDefExt = L"*.obj\0";
+
+    if (GetOpenFileName(&of)) {
+        wcstombs(buf, filename, 1024);
+
+        return LoadModel(buf, m);
+    }
+
+    return -1;
 }

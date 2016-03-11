@@ -3,6 +3,7 @@
 #include "util.h"
 #include "ModelLoader.h"
 #include "SHSampler.h"
+#include "glVector.h"
 
 typedef struct {
     unsigned char *data;
@@ -20,20 +21,26 @@ private:
 
     tModel      *geometry;
 
-    tPixel3     *lightCoeff; // Array of SH function
-    tPixel3   ***transCoeff; // Array of meshes, Array of Vertices, Array of SH function
+    glVector    *lightCoeff; // Array of SH function
+    glVector  ***transCoeff; // Array of meshes, Array of Vertices, Array of SH function
 
     CSHSampler  shSampler;
+
+    void(*progresCbk)(char *);
+
+    void updateProgress(char *phase, float percent);
 
 private:
     void allocateMemory();
 
     void deallocateMemory();
 
-    void castLightFromProbe(tPixel3 *color, Point3D *dir);
+    void castLightFromProbe(glVector *color, glVector *dir);
 
-    void projectLight(tPixel3 *coeff);
-    void projectShadow(tPixel3 *coeff, int mIdx, int vIdx);
+    void projectLight(glVector *coeff);
+    void projectShadow(glVector *coeff, int mIdx, int vIdx);
+
+    void projectShadowRange(glVector *coeff, int mIdx, int vIdx_Start, int vIdx_End);
 
     void computeLightCoefficients();
 
@@ -43,7 +50,7 @@ private:
 
     bool saveTransferCoefficients();
 
-    bool Visibility(int vIdx, int mIdx, Point3D *dir);
+    bool Visibility(int vIdx, int mIdx, glVector *dir);
 
 public:
     CLightModel();
@@ -58,6 +65,8 @@ public:
     int  computeCoefficients(int samples=64, int bands=2, bool force=false);
 
     void evaluatePRT(tPixel3 *p, int mIdx, int vIdx);
+
+    void setProgressCbk(void(*)(char *));
 
     void finish();
 };

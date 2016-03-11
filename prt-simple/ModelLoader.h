@@ -39,6 +39,8 @@ typedef struct {
 
 int LoadModel(char *strFile, tModel *m);
 
+int LoadModel(tModel *m);
+
 void ReleaseModel(tModel *m);
 
 #endif

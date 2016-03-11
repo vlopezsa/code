@@ -3,11 +3,12 @@
 #include "util.h"
 
 #include "LightModel.h"
+#include "glVector.h"
 
 typedef struct
 {
-    Point3D  cart;
-    Point2D  sphr;
+    glVector  cart;
+    glVector  sphr;
     float   *sh;
 }tSphereSample;
 
@@ -22,7 +23,7 @@ private:
 private:
     void deleteShCoeff();
 
-    void calculateSH(float **sh, Point2D *uSphere);
+    void calculateSH(float **sh, glVector *uSphere);
 
 public:
     CSHSampler();
