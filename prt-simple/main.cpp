@@ -23,6 +23,8 @@ float EyeX, EyeY, EyeZ;
 // The position of the eye, specified in spherical coordinates.
 float XZAng, YZAng, DistanceToCenter;
 
+float camSpeed = 0.5f;
+
 bool MouseDown = false;
 int LastMouseX, LastMouseY, CurMouseX, CurMouseY;
 int LastMouseButtonClicked;
@@ -107,15 +109,15 @@ void SetProgressInfoCbk(char *info)
 
 void SetCameraInitialPos()
 {
-    Cam.m_MaxForwardVelocity = 5.0f;
+    Cam.m_MaxForwardVelocity = 100.0f;
     Cam.m_MaxPitchRate = 5.0f;
     Cam.m_MaxHeadingRate = 5.0f;
     Cam.m_PitchDegrees = -2.600001f;
     Cam.m_HeadingDegrees = 49.199955f;
 
-    Cam.m_Position.x = -9.831701f;
-    Cam.m_Position.y = 6.303247f;
-    Cam.m_Position.z = -37.817413f;
+    Cam.m_Position.x = 0.0f;
+    Cam.m_Position.y = 0.0f;
+    Cam.m_Position.z = 0.0f;
 }
 
 void Render() {
@@ -137,10 +139,10 @@ void Render() {
 
     Cam.SetPrespective();
 
-    glUseProgram(GlobalProgramObject);
+    //glUseProgram(GlobalProgramObject);
 
     glPushMatrix();
-    glScalef(1.0f, 1.0f, 1.0f);
+    glScalef(0.1f, 0.1f, 0.1f);
     glEnable(GL_CULL_FACE);
 
     for (int j = 0; j<model.nMesh; j++) {
@@ -174,7 +176,7 @@ void Render() {
 
     glPopMatrix();
 
-    glUseProgram(0);
+    //glUseProgram(0);
 
     TwDraw();
 
@@ -206,12 +208,14 @@ void KeyEvent(unsigned char key, int x, int y)
     switch (key)
     {
         // Pressing ESC terminates the program
-    case 27: EndProgram(); break;
+    case 27: 
+        EndProgram();
+        break;
     case 'w': case 'W':
-        Cam.ChangeVelocity(0.5f);
+        Cam.ChangeVelocity(camSpeed);
         break;
     case 's': case 'S':
-        Cam.ChangeVelocity(-0.5f);
+        Cam.ChangeVelocity(camSpeed*-1.0f);
         break;
     case 'a': case 'A':
     {
@@ -219,8 +223,8 @@ void KeyEvent(unsigned char key, int x, int y)
         float x = sin(Heading);
         float z = cos(Heading);
 
-        Cam.m_Position.x += x*0.5f;
-        Cam.m_Position.z += z*0.5f;
+        Cam.m_Position.x += x*camSpeed;
+        Cam.m_Position.z += z*camSpeed;
     }
     break;
 
@@ -230,8 +234,8 @@ void KeyEvent(unsigned char key, int x, int y)
         float x = sin(Heading);
         float z = cos(Heading);
 
-        Cam.m_Position.x += x*0.5f;
-        Cam.m_Position.z += z*0.5f;
+        Cam.m_Position.x += x*camSpeed;
+        Cam.m_Position.z += z*camSpeed;
     }
     break;
 
@@ -424,7 +428,7 @@ int main(int argc, char *argv[]) {
     
     TwBar *bar = TwNewBar("Info & Options");
     TwDefine(" GLOBAL help='PRT Simple Example' "); 
-    TwDefine(" TweakBar size='200 200' color='96 216 224' ");
+    TwDefine(" 'Info & Options' size='200 200' color='96 216 224' ");
     
     SetCameraInitialPos();
 
@@ -440,12 +444,19 @@ int main(int argc, char *argv[]) {
             printf("Couldn't load light probe file\n");
 
     /* Pre calculate light coefficients */
-    light.computeCoefficients(8*8, 4, false);
+    light.computeCoefficients(50*50, 4, true);
 
     TwAddVarRO(bar, "NumSamples", TW_TYPE_UINT32, &light.nSamples,
         " label='Number of samples' help='Number of samples used in Monte Carlo integration.' ");
     TwAddVarRO(bar, "NumBands", TW_TYPE_UINT32, &light.nBands,
         " label='Number of bands' help='Number of bands used to calculate the spherical harmonics' ");
+
+    TwAddSeparator(bar, "cam separator", "group='Camera'");
+
+    TwAddVarRW(bar, "CamSpeed", TW_TYPE_FLOAT, &camSpeed, "group='Camera'");
+    TwAddVarRW(bar, "CamPosX", TW_TYPE_FLOAT, &Cam.m_Position.x, "group='Camera'");
+    TwAddVarRW(bar, "CamPosY", TW_TYPE_FLOAT, &Cam.m_Position.y, "group='Camera'");
+    TwAddVarRW(bar, "CamPosZ", TW_TYPE_FLOAT, &Cam.m_Position.z, "group='Camera'");
 
     LoadShaderEngine();
 

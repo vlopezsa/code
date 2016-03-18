@@ -36,7 +36,8 @@ private:
     void projectLight(glVector *coeff);
     void projectShadow(glVector *coeff, int mIdx, int vIdx);
 
-    void projectShadowRange(glVector *coeff, int mIdx, int vIdx_Start, int vIdx_End);
+    void projectShadowRange(glVector **coeff, int mIdx,
+                            int vIdx_Start, int vIdx_End);
 
     void computeLightCoefficients();
 

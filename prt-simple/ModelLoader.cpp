@@ -262,6 +262,7 @@ int LoadModelEx(char *strFile, tModel *m) {
 
 #include <assimp\scene.h>
 #include <assimp\cimport.h>
+#include <assimp\config.h>
 #include <assimp\postprocess.h>
 
 void convertAIMesh(const aiMesh *mesh, tMesh *m)
@@ -277,9 +278,9 @@ void convertAIMesh(const aiMesh *mesh, tMesh *m)
 
     for (int j = 0; j < mesh->mNumVertices; j++)
     {
-        m->vertex[j].p.x = mesh->mVertices[j].x;
-        m->vertex[j].p.y = mesh->mVertices[j].y;
-        m->vertex[j].p.z = mesh->mVertices[j].z;
+        m->vertex[j].p.x = (fabs(mesh->mVertices[j].x) < 0.00001f) ? 0.0f : mesh->mVertices[j].x;
+        m->vertex[j].p.y = (fabs(mesh->mVertices[j].y) < 0.00001f) ? 0.0f : mesh->mVertices[j].y;
+        m->vertex[j].p.z = (fabs(mesh->mVertices[j].z) < 0.00001f) ? 0.0f : mesh->mVertices[j].z;
 
         m->vertex[j].n.x = mesh->mNormals[j].x;
         m->vertex[j].n.y = mesh->mNormals[j].y;
@@ -290,22 +291,46 @@ void convertAIMesh(const aiMesh *mesh, tMesh *m)
     for (int j = 0; j < mesh->mNumFaces; j++)
     {
         m->index[k++] = mesh->mFaces[j].mIndices[0];
-        m->index[k++] = mesh->mFaces[j].mIndices[1];
-        m->index[k++] = mesh->mFaces[j].mIndices[2];
+        if (mesh->mFaces[j].mNumIndices == 1)
+        {
+            m->index[k++] = mesh->mFaces[j].mIndices[0];
+            m->index[k++] = mesh->mFaces[j].mIndices[0];
+        }
+        else if (mesh->mFaces[j].mNumIndices == 2)
+        {
+            m->index[k++] = mesh->mFaces[j].mIndices[1];
+            m->index[k++] = mesh->mFaces[j].mIndices[1];
+        }
+        else
+        {
+            m->index[k++] = mesh->mFaces[j].mIndices[1];
+            m->index[k++] = mesh->mFaces[j].mIndices[2];
+        }
     }
 }
 
 int LoadModel(char *fileName, tModel *t)
 {
     const aiScene *pScene;
+    aiPropertyStore *pStore;
     int i, j, k;
 
-    pScene = aiImportFile(fileName, 
+    pStore = aiCreatePropertyStore();
+
+    aiSetImportPropertyInteger(pStore, AI_CONFIG_PP_FD_REMOVE, 1);
+    aiSetImportPropertyInteger(pStore, AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+
+    pScene = aiImportFileExWithProperties(fileName, 
+        aiProcess_PreTransformVertices |
         aiProcess_Triangulate |
-        aiProcess_GenNormals |
         aiProcess_GenSmoothNormals |
-        aiProcess_PreTransformVertices
-        );
+        aiProcess_FindDegenerates |
+        aiProcess_SortByPType |
+        aiProcess_FixInfacingNormals |
+        //aiProcessPreset_TargetRealtime_MaxQuality
+        0,
+        NULL,
+        pStore);
 
     if (!pScene)
         return -1;
@@ -326,6 +351,7 @@ int LoadModel(char *fileName, tModel *t)
     }
 
     aiReleaseImport(pScene);
+    aiReleasePropertyStore(pStore);
 
     return 0;
 }
