@@ -9,7 +9,7 @@
     <_PropertySheetDisplayName>common</_PropertySheetDisplayName>
     <OutDir>$(SolutionDir)\bin64</OutDir>
     <IncludePath>$(SolutionDir)\3rd_party\glut\include;$(SolutionDir)\3rd_party\glew\include;$(SolutionDir)\3rd_party\AntTweakBar\include;$(SolutionDir)\3rd_party\Assimp\include;$(SolutionDir)\3rd_party\FreeImage\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\3rd_party\glut\lib64;$(SolutionDir)\3rd_party\glew\lib64;$(SolutionDir)\3rd_party\AntTweakBar\lib;$(SolutionDir)\3rd_party\Assimp\lib64;$(SolutionDir)\3rd_party\FreeImage\lib64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)\3rd_party\glut\lib64;$(SolutionDir)\3rd_party\glew\lib64;$(SolutionDir)\3rd_party\AntTweakBar\lib64;$(SolutionDir)\3rd_party\Assimp\lib64;$(SolutionDir)\3rd_party\FreeImage\lib64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
