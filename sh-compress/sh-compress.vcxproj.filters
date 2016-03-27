@@ -21,12 +21,12 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="image.cpp">
+    <ClCompile Include="..\core\image.cpp">
       <Filter>Image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="image.h">
+    <ClInclude Include="..\core\image.h">
       <Filter>Image</Filter>
     </ClInclude>
   </ItemGroup>
