@@ -4,7 +4,7 @@ class Vector2
 {
 public:
     Vector2();
-    Vector2(float a, float b, float c);
+    Vector2(float a, float b);
     Vector2(Vector2 &v);
     virtual ~Vector2();
 

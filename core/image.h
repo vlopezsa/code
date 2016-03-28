@@ -24,6 +24,7 @@ public:
     const unsigned int &Height; // Image height, in pixels
     const unsigned int &bpp;    // Bits per pixel
     const ImagePixelFormat &Format; // Pixel format
+    const unsigned int &Pitch;
 
 private:
     void _allocResources();

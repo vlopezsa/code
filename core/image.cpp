@@ -53,7 +53,8 @@ Image::Image() :
     Width(_Width),
     Height(_Height),
     bpp(_bpp),
-    Format(_Format)
+    Format(_Format),
+    Pitch(_Pitch)
 {
     this->_Width  = 0;
     this->_Height = 0;
@@ -70,7 +71,8 @@ Image::Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat for
     Width(_Width),
     Height(_Height),
     bpp(_bpp),
-    Format(_Format)
+    Format(_Format),
+    Pitch(_Pitch)
 {
     this->_Width = newWidth;
     this->_Height = newHeight;
