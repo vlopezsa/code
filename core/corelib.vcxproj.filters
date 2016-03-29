@@ -16,6 +16,15 @@
     <Filter Include="SH">
       <UniqueIdentifier>{e42039e7-b5d0-43a5-8d64-3af65cb37c20}</UniqueIdentifier>
     </Filter>
+    <Filter Include="OS Util">
+      <UniqueIdentifier>{c50fffe3-9315-4603-ab93-1ae575c2fe78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{52c3047f-1129-4d28-9ae1-c8c6dbbd6498}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera">
+      <UniqueIdentifier>{36af5edf-450f-4153-b299-78489244c92e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -45,6 +54,21 @@
     <ClInclude Include="sphericalharmonic.h">
       <Filter>SH</Filter>
     </ClInclude>
+    <ClInclude Include="osutil.h">
+      <Filter>OS Util</Filter>
+    </ClInclude>
+    <ClInclude Include="scene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="quaternion.h">
+      <Filter>Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thirdparty.cpp">
@@ -70,6 +94,21 @@
     </ClCompile>
     <ClCompile Include="sphericalharmonic.cpp">
       <Filter>SH</Filter>
+    </ClCompile>
+    <ClCompile Include="osutil.cpp">
+      <Filter>OS Util</Filter>
+    </ClCompile>
+    <ClCompile Include="scene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="mesh.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="camera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="quaternion.cpp">
+      <Filter>Math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

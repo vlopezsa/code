@@ -19,6 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="mesh.h" />
+    <ClInclude Include="osutil.h" />
+    <ClInclude Include="quaternion.h" />
+    <ClInclude Include="scene.h" />
     <ClInclude Include="thirdparty.h" />
     <ClInclude Include="graphics.h" />
     <ClInclude Include="image.h" />
@@ -30,10 +35,15 @@
     <ClInclude Include="vector3.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="image.cpp" />
+    <ClCompile Include="mesh.cpp" />
     <ClCompile Include="montecarlo.cpp" />
+    <ClCompile Include="osutil.cpp" />
+    <ClCompile Include="quaternion.cpp" />
     <ClCompile Include="rectsampler.cpp" />
     <ClCompile Include="sampler.cpp" />
+    <ClCompile Include="scene.cpp" />
     <ClCompile Include="sphericalharmonic.cpp" />
     <ClCompile Include="thirdparty.cpp" />
     <ClCompile Include="vector2.cpp" />

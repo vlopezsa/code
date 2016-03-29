@@ -8,13 +8,6 @@ public:
     Vector2(Vector2 &v);
     virtual ~Vector2();
 
-    union
-    {
-        float d[2];
-        struct { float x, y; };
-        struct { float phi, theta; };
-    };
-
     float length();
     void normalize();
 
@@ -25,6 +18,13 @@ public:
     void operator +=(const Vector2 &v);
     void operator -=(const Vector2 &v);
 
+    union
+    {
+        float d[2];
+        struct { float x, y; };
+        struct { float u, v; };
+        struct { float phi, theta; };
+    };
 };
 
 Vector2 operator *(const Vector2 &v, float scalar);
