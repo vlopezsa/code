@@ -17,6 +17,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sh-compress", "sh-compress\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "corelib", "core\corelib.vcxproj", "{E2DF94F5-FE42-42DC-875B-3B8424F85361}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "prt", "prt\prt.vcxproj", "{CD11290F-AF28-4286-94AD-2C3A65D14CF2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E2DF94F5-FE42-42DC-875B-3B8424F85361} = {E2DF94F5-FE42-42DC-875B-3B8424F85361}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -102,6 +107,24 @@ Global
 		{E2DF94F5-FE42-42DC-875B-3B8424F85361}.Release|Win32.Build.0 = Release|Win32
 		{E2DF94F5-FE42-42DC-875B-3B8424F85361}.Release|x64.ActiveCfg = Release|x64
 		{E2DF94F5-FE42-42DC-875B-3B8424F85361}.Release|x64.Build.0 = Release|x64
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Debug|Win32.Build.0 = Debug|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Debug|x64.ActiveCfg = Debug|x64
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Debug|x64.Build.0 = Debug|x64
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Profile|Mixed Platforms.ActiveCfg = Release|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Profile|Mixed Platforms.Build.0 = Release|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Profile|Win32.ActiveCfg = Release|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Profile|Win32.Build.0 = Release|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Profile|x64.ActiveCfg = Release|x64
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Profile|x64.Build.0 = Release|x64
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Release|Win32.ActiveCfg = Release|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Release|Win32.Build.0 = Release|Win32
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Release|x64.ActiveCfg = Release|x64
+		{CD11290F-AF28-4286-94AD-2C3A65D14CF2}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
