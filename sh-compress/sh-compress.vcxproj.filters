@@ -9,61 +9,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Core">
-      <UniqueIdentifier>{e203dbb6-744f-4c3b-b53f-871993034adf}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\core\image.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\vector3.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\vector2.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\sampler.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\montecarlo.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\sphericalharmonic.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\rectsampler.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\core\image.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\vector3.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\vector2.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\graphics.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\sampler.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\montecarlo.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\sphericalharmonic.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\rectsampler.h">
-      <Filter>Core</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

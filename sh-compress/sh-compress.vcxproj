@@ -146,24 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\core\image.cpp" />
-    <ClCompile Include="..\core\montecarlo.cpp" />
-    <ClCompile Include="..\core\rectsampler.cpp" />
-    <ClCompile Include="..\core\sampler.cpp" />
-    <ClCompile Include="..\core\sphericalharmonic.cpp" />
-    <ClCompile Include="..\core\vector2.cpp" />
-    <ClCompile Include="..\core\vector3.cpp" />
     <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\core\graphics.h" />
-    <ClInclude Include="..\core\image.h" />
-    <ClInclude Include="..\core\montecarlo.h" />
-    <ClInclude Include="..\core\rectsampler.h" />
-    <ClInclude Include="..\core\sampler.h" />
-    <ClInclude Include="..\core\sphericalharmonic.h" />
-    <ClInclude Include="..\core\vector2.h" />
-    <ClInclude Include="..\core\vector3.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
