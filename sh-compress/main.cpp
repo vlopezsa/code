@@ -22,13 +22,30 @@ void endThirdParty()
     FreeImage_DeInitialise();
 }
 
+float __inline clamp(float value, const float min, const float max)
+{
+    if (value < min)
+        return min;
+
+    if (value > max)
+        return max;
+
+    return value;
+}
+
 int main(int argc, char **argv)
 {
     // First, initialize all of the external libraries
     initThirdParty(&argc, &argv);
 
     Image imgIn;
-    int nBands = 1;
+    int nBands = 3;
+
+    char strOutName[256] = {};
+    char strRecName[256] = {};
+    char strInName[256] = {};
+
+    sprintf(strInName, "D:\\Serious\\Doctorado\\code\\bin64\\test3.jpg");
 
     if (argc > 1)
     {
@@ -40,6 +57,9 @@ int main(int argc, char **argv)
                 case 'l': case 'L':
                     nBands = atoi(argv[++cnt]);
                     break;
+                case 'f': case 'F':
+                    strncpy(strInName, argv[++cnt], sizeof(strInName));
+                    break;
                 default:
                     cnt++;
                     break;
@@ -49,16 +69,13 @@ int main(int argc, char **argv)
         }
     }
 
-    char strOutName[256] = {};
-    char strRecName[256] = {};
-
     sprintf(strOutName, "copy.png");
     sprintf(strRecName, "rec-l%d.png", nBands);
 
     std::cout << "SH L: " << nBands << endl;
 
     try {
-        imgIn.LoadFromFile("D:\\Serious\\Doctorado\\code\\bin64\\test.jpg");
+        imgIn.LoadFromFile(strInName);
 
         Image imgOut(imgIn.Width, imgIn.Height, imgIn.Format, imgIn.bpp);
         Image imgRec(imgIn.Width, imgIn.Height, imgIn.Format, imgIn.bpp);
@@ -132,9 +149,9 @@ int main(int argc, char **argv)
 
             c = imgC[i];
 
-            rec[c + 0] = (unsigned char)(colRec.r);
-            rec[c + 1] = (unsigned char)(colRec.g);
-            rec[c + 2] = (unsigned char)(colRec.b);
+            rec[c + 0] = (unsigned char)(clamp(colRec.r, 0.0f, 255.0f));
+            rec[c + 1] = (unsigned char)(clamp(colRec.g, 0.0f, 255.0f));
+            rec[c + 2] = (unsigned char)(clamp(colRec.b, 0.0f, 255.0f));
         }
 
         // Save results
