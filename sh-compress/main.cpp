@@ -5,7 +5,8 @@
 #include "image.h"
 #include "montecarlo.h"
 #include "rectsampler.h"
-#include "sphericalharmonic.h"
+#include "shstandard.h"
+#include "shgeomerics.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -39,13 +40,13 @@ int main(int argc, char **argv)
     initThirdParty(&argc, &argv);
 
     Image imgIn;
-    int nBands = 3;
+    int nBands = 2;
 
     char strOutName[256] = {};
     char strRecName[256] = {};
     char strInName[256] = {};
 
-    sprintf(strInName, "D:\\Serious\\Doctorado\\code\\bin64\\test3.jpg");
+    sprintf(strInName, "D:\\Serious\\Doctorado\\code\\bin64\\test.jpg");
 
     if (argc > 1)
     {
@@ -81,7 +82,10 @@ int main(int argc, char **argv)
         Image imgRec(imgIn.Width, imgIn.Height, imgIn.Format, imgIn.bpp);
 
         RectSampler rs(imgRec.Width, imgRec.Height);
-        SphericalHarmonic sh(&rs, nBands);
+        //SHStandard sh(&rs, nBands);
+        SHGeomerics sh(&rs, nBands);
+
+        sh.calculateCoefficients();
 
         unsigned char *out = imgOut.getPixelData();
         unsigned char *rec = imgRec.getPixelData();
@@ -94,7 +98,7 @@ int main(int argc, char **argv)
         Vector3 colRec;
 
         imgC.resize(rs.numSamples);
-        colCom.resize(sh.numBands2);
+        colCom.resize(sh.numBaseCoeff);
 
         // Getting positions inside our image buffer
         // for each point on the sphere
@@ -118,7 +122,7 @@ int main(int argc, char **argv)
             colRec.g = (float)in[c + 1];
             colRec.b = (float)in[c + 2];
 
-            for (j = 0; j < sh.numBands2; j++)
+            for (j = 0; j < sh.numBaseCoeff; j++)
             {
                 colCom[j].r += colRec.r * sh.Coefficient[i][j];
                 colCom[j].g += colRec.g * sh.Coefficient[i][j];
@@ -127,8 +131,8 @@ int main(int argc, char **argv)
         }
 
         // Scale the function basis
-        float scale = (float)(4.0f*M_PI) / (float)rs.numSamples;
-        for (j = 0; j < sh.numBands2; j++)
+        float scale = sh.getScaleFactor();
+        for (j = 0; j < sh.numBaseCoeff; j++)
         {
             colCom[j].r *= scale;
             colCom[j].g *= scale;
@@ -136,23 +140,46 @@ int main(int argc, char **argv)
         }
 
         // Reconstruct the image
-        for (i = 0; i < rs.numSamples; i++)
+        if (sh.shType == SHImplementation::SH_Geomerics)
         {
-            colRec = Vector3();
-
-            for (j = 0; j < sh.numBands2; j++)
+            for (i = 0; i < rs.numSamples; i++)
             {
-                colRec.r += colCom[j].r * sh.Coefficient[i][j];
-                colRec.g += colCom[j].g * sh.Coefficient[i][j];
-                colRec.b += colCom[j].b * sh.Coefficient[i][j];
+                colRec = Vector3();
+
+                for (j = 0; j < sh.numBaseCoeff; j++)
+                {
+                    colRec.r += colCom[j].r * sh.Coefficient[i][j] * sh.scaleRec[j];
+                    colRec.g += colCom[j].g * sh.Coefficient[i][j] * sh.scaleRec[j];;
+                    colRec.b += colCom[j].b * sh.Coefficient[i][j] * sh.scaleRec[j];;
+                }
+
+                c = imgC[i];
+
+                rec[c + 0] = (unsigned char)(clamp(colRec.r, 0.0f, 255.0f));
+                rec[c + 1] = (unsigned char)(clamp(colRec.g, 0.0f, 255.0f));
+                rec[c + 2] = (unsigned char)(clamp(colRec.b, 0.0f, 255.0f));
             }
-
-            c = imgC[i];
-
-            rec[c + 0] = (unsigned char)(clamp(colRec.r, 0.0f, 255.0f));
-            rec[c + 1] = (unsigned char)(clamp(colRec.g, 0.0f, 255.0f));
-            rec[c + 2] = (unsigned char)(clamp(colRec.b, 0.0f, 255.0f));
         }
+        else
+        {
+            for (i = 0; i < rs.numSamples; i++)
+            {
+                colRec = Vector3();
+
+                for (j = 0; j < sh.numBaseCoeff; j++)
+                {
+                    colRec.r += colCom[j].r * sh.Coefficient[i][j];
+                    colRec.g += colCom[j].g * sh.Coefficient[i][j];
+                    colRec.b += colCom[j].b * sh.Coefficient[i][j];
+                }
+
+                c = imgC[i];
+
+                rec[c + 0] = (unsigned char)(clamp(colRec.r, 0.0f, 255.0f));
+                rec[c + 1] = (unsigned char)(clamp(colRec.g, 0.0f, 255.0f));
+                rec[c + 2] = (unsigned char)(clamp(colRec.b, 0.0f, 255.0f));
+            }
+        }        
 
         // Save results
         imgOut.SaveToFile(strOutName);

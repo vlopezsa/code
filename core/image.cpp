@@ -88,7 +88,7 @@ Image::Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat for
     }
     catch (std::exception &e)
     {
-        throw;
+        throw e;
     }
 }
 

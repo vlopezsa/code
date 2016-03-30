@@ -18,11 +18,12 @@ bool osOpenDlg(char *outFileName, size_t maxLength)
     of.hInstance = GetModuleHandle(NULL);
     of.lpstrFilter = L"*.*\0\0";
     of.lpstrFile = filename;
-    of.nMaxFile = maxLength;
+    of.nMaxFile = (DWORD)maxLength;
     of.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_LONGNAMES;
 
     if (GetOpenFileName(&of)) {
-        wcstombs(outFileName, filename, maxLength);
+        size_t c;
+        wcstombs_s(&c, outFileName, maxLength, filename, maxLength);
         res = true;
     }
 

@@ -23,7 +23,7 @@ public:
         float d[2];
         struct { float x, y; };
         struct { float u, v; };
-        struct { float phi, theta; };
+        struct { float theta, phi; };
     };
 };
 

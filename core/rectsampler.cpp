@@ -19,12 +19,12 @@ void RectSampler::calculateSamples()
             cell.x = (float)j / (float)(this->Width);
             cell.y = (float)i / (float)(this->Height);
 
-            uSphere.theta = 2 * acos(sqrt(1.0f - cell.x));
-            uSphere.phi   = 2 * (float)M_PI * cell.y;
+            uSphere.theta = 2.0f * (float)acos(sqrt(1.0f - cell.x));
+            uSphere.phi   = 2.0f * (float)M_PI * cell.y;
 
-            uCartesian.x = sin(uSphere.theta) * cos(uSphere.phi);
-            uCartesian.y = sin(uSphere.theta) * sin(uSphere.phi);
-            uCartesian.z = cos(uSphere.theta);
+            uCartesian.x = (float)(sin(uSphere.theta) * cos(uSphere.phi));
+            uCartesian.y = (float)(sin(uSphere.theta) * sin(uSphere.phi));
+            uCartesian.z = (float)(cos(uSphere.theta));
 
             _Samples[sCnt].Square.x = j;
             _Samples[sCnt].Square.y = i;
