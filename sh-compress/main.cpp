@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     char strRecName[256] = {};
     char strInName[256] = {};
 
-    sprintf(strInName, "D:\\Serious\\Doctorado\\code\\bin64\\test.jpg");
+    sprintf(strInName, "D:\\Serious\\Doctorado\\code\\bin64\\simple.png");
 
     if (argc > 1)
     {
@@ -131,13 +131,7 @@ int main(int argc, char **argv)
         }
 
         // Scale the function basis
-        float scale = sh.getScaleFactor();
-        for (j = 0; j < sh.numBaseCoeff; j++)
-        {
-            colCom[j].r *= scale;
-            colCom[j].g *= scale;
-            colCom[j].b *= scale;
-        }
+        sh.calculateScaleFactors();        
 
         // Reconstruct the image
         if (sh.shType == SHImplementation::SH_Geomerics)
@@ -148,9 +142,9 @@ int main(int argc, char **argv)
 
                 for (j = 0; j < sh.numBaseCoeff; j++)
                 {
-                    colRec.r += colCom[j].r * sh.Coefficient[i][j] * sh.scaleRec[j];
-                    colRec.g += colCom[j].g * sh.Coefficient[i][j] * sh.scaleRec[j];;
-                    colRec.b += colCom[j].b * sh.Coefficient[i][j] * sh.scaleRec[j];;
+                    colRec.r += colCom[j].r * sh.Coefficient[i][j] * sh.scaleFactor[j];
+                    colRec.g += colCom[j].g * sh.Coefficient[i][j] * sh.scaleFactor[j];
+                    colRec.b += colCom[j].b * sh.Coefficient[i][j] * sh.scaleFactor[j];
                 }
 
                 c = imgC[i];
@@ -162,6 +156,8 @@ int main(int argc, char **argv)
         }
         else
         {
+            sh.scaleFunctionCoeff(colCom);
+
             for (i = 0; i < rs.numSamples; i++)
             {
                 colRec = Vector3();

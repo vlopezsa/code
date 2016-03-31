@@ -15,5 +15,5 @@ public:
     SHGeomerics(Sampler *sampler, unsigned int numBands);
     ~SHGeomerics();
 
-    float getScaleFactor();
+    void calculateScaleFactors();
 };

@@ -17,9 +17,11 @@ SHStandard::~SHStandard()
 {
 }
 
-float SHStandard::getScaleFactor()
+void SHStandard::calculateScaleFactors()
 {
-    return (float)(4.0f * M_PI) / (float)this->_Sampler->numSamples;
+    this->_scaleFactor.assign(
+        this->_numBaseCoeff,
+        (float)(4.0f * M_PI) / (float)this->_Sampler->numSamples);
 }
 
 void SHStandard::calculateNumberBaseCoeff()

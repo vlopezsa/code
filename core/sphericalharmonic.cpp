@@ -13,7 +13,7 @@ SphericalHarmonic::SphericalHarmonic(SHImplementation type, Sampler *sampler) :
     Coefficient(_Coefficient),
     numBands(_numBands),
     numBaseCoeff(_numBaseCoeff),
-    scaleRec(_scaleRec)
+    scaleFactor(_scaleFactor)
 {
     if (SHImplementation_Set.find(type) == SHImplementation_Set.end())
     {
@@ -37,7 +37,7 @@ SphericalHarmonic::SphericalHarmonic(SHImplementation type, Sampler * sampler, u
     Coefficient(_Coefficient),
     numBands(_numBands),
     numBaseCoeff(_numBaseCoeff),
-    scaleRec(_scaleRec)
+    scaleFactor(_scaleFactor)
 {
     if (SHImplementation_Set.find(type) == SHImplementation_Set.end())
     {
@@ -70,6 +70,34 @@ void SphericalHarmonic::setNumBands(unsigned int numBands)
 {
     this->_numBands = numBands;
     this->calculateNumberBaseCoeff();
+}
+
+bool SphericalHarmonic::scaleFunctionCoeff(std::vector<float>& fCoeff)
+{
+    if (fCoeff.size() != this->_scaleFactor.size())
+        return false;
+
+    for (int i = 0; i < fCoeff.size(); i++)
+    {
+        fCoeff[i] *= this->_scaleFactor[i];
+    }
+
+    return true;
+}
+
+bool SphericalHarmonic::scaleFunctionCoeff(std::vector<Vector3>& fCoeff)
+{
+    if (fCoeff.size() != this->_scaleFactor.size())
+        return false;
+
+    for (int i = 0; i < fCoeff.size(); i++)
+    {
+        fCoeff[i].x *= this->_scaleFactor[i];
+        fCoeff[i].y *= this->_scaleFactor[i];
+        fCoeff[i].z *= this->_scaleFactor[i];
+    }
+
+    return true;
 }
 
 float SphericalHarmonic::calculateBasis(unsigned int l, int m, const SamplePoint *s)

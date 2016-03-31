@@ -4,12 +4,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-/*float __geomeric_f[] = {
-    1.0f,
-    3.0f, 3.0f, 3.0f,
-    7.5f, 7.5f, 7.5f, 7.5f, 7.5f
-};*/
-
 float __geomeric_f[] = {
     1.0f,
     3.0f, 3.0f, 3.0f,
@@ -19,7 +13,7 @@ float __geomeric_f[] = {
 SHGeomerics::SHGeomerics(Sampler * sampler)
     : SphericalHarmonic(SHImplementation::SH_Geomerics, sampler)    
 {
-    this->_scaleRec.assign(__geomeric_f,
+    this->_scaleFactor.assign(__geomeric_f,
         __geomeric_f + (sizeof(__geomeric_f) / sizeof(__geomeric_f[0])));
 
 }
@@ -31,7 +25,7 @@ SHGeomerics::SHGeomerics(Sampler * sampler, unsigned int numBands)
     if (numBands > 2)
         this->setNumBands(2);
 
-    this->_scaleRec.assign(__geomeric_f,
+    this->_scaleFactor.assign(__geomeric_f,
         __geomeric_f + (sizeof(__geomeric_f) / sizeof(__geomeric_f[0])));
 }
 
@@ -39,15 +33,10 @@ SHGeomerics::~SHGeomerics()
 {
 }
 
-float SHGeomerics::getScaleFactor()
+void SHGeomerics::calculateScaleFactors()
 {
-    // Hack, in Geomerics here we update the scale factors
-    // for reconstruction, based on how
-
-    for (int i = 0; i < this->_scaleRec.size(); i++)
-        this->_scaleRec[i] = this->_scaleRec[i] / (float)this->_Sampler->numSamples;
-
-    return 1.0f;
+    for (int i = 0; i < this->_scaleFactor.size(); i++)
+        this->_scaleFactor[i] = this->_scaleFactor[i] / (float)this->_Sampler->numSamples;
 }
 
 void SHGeomerics::calculateNumberBaseCoeff()

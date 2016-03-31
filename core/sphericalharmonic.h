@@ -21,14 +21,14 @@ private:
 
 protected:
     unsigned int        _numBaseCoeff;
-    std::vector<float>  _scaleRec;
+    std::vector<float>  _scaleFactor;
     Sampler             *_Sampler;
 
 public:
     const std::vector<std::vector<float>> &Coefficient;
     const unsigned int  &numBands;  // Number of bands
     const unsigned int  &numBaseCoeff; // Number of basis coeff
-    const std::vector<float> &scaleRec;
+    const std::vector<float> &scaleFactor;
 
     const SHImplementation  &shType;
 
@@ -41,5 +41,8 @@ public:
 
     void calculateCoefficients();
 
-    virtual float getScaleFactor() { return 1.0f; }
+    bool scaleFunctionCoeff(std::vector<float> &fCoeff);
+    bool scaleFunctionCoeff(std::vector<Vector3> &fCoeff);
+
+    virtual void calculateScaleFactors() { }
 };

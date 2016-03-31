@@ -15,5 +15,5 @@ public:
     SHStandard(Sampler *sampler, unsigned int numBands);
     ~SHStandard();
 
-    float getScaleFactor();
+    void calculateScaleFactors();
 };
