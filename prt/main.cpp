@@ -68,37 +68,22 @@ void Render()
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
     for (unsigned int i = 0; i < g_Scene.numMeshes(); i++)
     {
-        glBegin(GL_TRIANGLES);
-
         Mesh *m = &g_Scene.mesh[i];
 
-        for (unsigned int j = 0; j < m->numTriangles(); j++)
-        {
-            glColor3f(0.0f, 0.0f, 0.0f);
-            glVertex3f(
-                m->vertex[m->triangle[j].v1].position.x,
-                m->vertex[m->triangle[j].v1].position.y,
-                m->vertex[m->triangle[j].v1].position.z
-                );
+        glVertexPointer(3, GL_FLOAT, sizeof(Vertex), &m->vertex[0].position.d);
+        glColorPointer(3, GL_FLOAT, sizeof(Vertex), &m->vertex[0].diffuse.d);
+        glNormalPointer(GL_FLOAT, sizeof(Vertex), &m->vertex[0].normal.d);
+        glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), &m->vertex[0].tex);
 
-            glColor3f(0.0f, 0.0f, 0.0f);
-            glVertex3f(
-                m->vertex[m->triangle[j].v2].position.x,
-                m->vertex[m->triangle[j].v2].position.y,
-                m->vertex[m->triangle[j].v2].position.z
-                );
+        glDrawElements(GL_TRIANGLES, m->numIndices(), GL_UNSIGNED_INT, &m->index[0]);
 
-            glColor3f(0.0f, 0.0f, 0.0f);
-            glVertex3f(
-                m->vertex[m->triangle[j].v3].position.x,
-                m->vertex[m->triangle[j].v3].position.y,
-                m->vertex[m->triangle[j].v3].position.z
-                );
-        }
-
-        glEnd();
     }
 
     TwDraw();
