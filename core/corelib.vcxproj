@@ -20,12 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="material.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="osutil.h" />
     <ClInclude Include="quaternion.h" />
     <ClInclude Include="scene.h" />
     <ClInclude Include="shgeomerics.h" />
     <ClInclude Include="shstandard.h" />
+    <ClInclude Include="texturemgr.h" />
     <ClInclude Include="thirdparty.h" />
     <ClInclude Include="graphics.h" />
     <ClInclude Include="image.h" />
@@ -39,6 +41,7 @@
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="image.cpp" />
+    <ClCompile Include="material.cpp" />
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="montecarlo.cpp" />
     <ClCompile Include="osutil.cpp" />
@@ -49,6 +52,7 @@
     <ClCompile Include="shgeomerics.cpp" />
     <ClCompile Include="shstandard.cpp" />
     <ClCompile Include="sphericalharmonic.cpp" />
+    <ClCompile Include="texturemgr.cpp" />
     <ClCompile Include="thirdparty.cpp" />
     <ClCompile Include="vector2.cpp" />
     <ClCompile Include="vector3.cpp" />

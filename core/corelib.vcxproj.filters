@@ -75,6 +75,12 @@
     <ClInclude Include="shgeomerics.h">
       <Filter>SH</Filter>
     </ClInclude>
+    <ClInclude Include="material.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="texturemgr.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thirdparty.cpp">
@@ -121,6 +127,12 @@
     </ClCompile>
     <ClCompile Include="shgeomerics.cpp">
       <Filter>SH</Filter>
+    </ClCompile>
+    <ClCompile Include="material.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="texturemgr.cpp">
+      <Filter>Scene</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

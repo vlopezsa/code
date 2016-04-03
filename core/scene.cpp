@@ -5,6 +5,12 @@
 
 #include "scene.h"
 
+void Scene::__release()
+{
+    mesh.clear();
+    material.clear();
+}
+
 Scene::Scene()
 {
 }
@@ -22,6 +28,7 @@ Scene::Scene(char * strFile)
 
 Scene::~Scene()
 {
+    __release();
 }
 
 bool Scene::loadFromFile(char * strFile)
@@ -46,13 +53,24 @@ bool Scene::loadFromFile(char * strFile)
         return false;
     }
 
+    __release();
+
     strName = std::string(strFile);
+
+    /* Loading meshes*/
 
     mesh.resize(pScene->mNumMeshes);
     
     for (unsigned int i=0; i < mesh.size(); i++)
     {
         mesh[i].importAIMesh(pScene->mMeshes[i]);
+    }
+
+    /* Loading materials */
+    material.resize(pScene->mNumMaterials);
+    for (unsigned int i = 0; i < pScene->mNumMaterials; i++)
+    {
+        material[i].importAIMaterial(&texture, pScene->mMaterials[i]);
     }
 
     aiReleaseImport(pScene);

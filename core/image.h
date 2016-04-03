@@ -32,13 +32,16 @@ private:
 
 public:
     Image();
+    Image(const Image &img);
 
     Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat format, unsigned int newBpp);
 
+    Image &operator = (Image &img);
+
     ~Image();
 
-    bool LoadFromFile(const char *fileName);
-    bool SaveToFile(const char *fileName);
+    int LoadFromFile(const char *fileName);
+    int SaveToFile(const char *fileName);
 
     unsigned char *getPixelData() { return data; }
 };

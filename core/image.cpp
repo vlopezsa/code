@@ -67,6 +67,35 @@ Image::Image() :
     this->_Pitch = 0;
 }
 
+Image::Image(const Image & img) :
+    Width(_Width),
+    Height(_Height),
+    bpp(_bpp),
+    Format(_Format),
+    Pitch(_Pitch)
+{
+    this->_Width = img.Width;
+    this->_Height = img.Height;
+    this->_bpp = img.bpp;
+    this->_Format = img.Format;
+
+    try
+    {
+        _allocResources();
+
+        unsigned char *out = getPixelData();
+
+
+        memcpy(out,
+            ((Image *)&img)->getPixelData(), // Not cool :(
+            this->Height*this->Pitch);
+    }
+    catch (std::exception &e)
+    {
+        throw e;
+    }
+}
+
 Image::Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat format, unsigned int newBpp) :
     Width(_Width),
     Height(_Height),
@@ -92,12 +121,37 @@ Image::Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat for
     }
 }
 
+Image & Image::operator=(Image & img)
+{
+    _deallocResources();
+
+    this->_Width = img.Width;
+    this->_Height = img.Height;
+    this->_bpp = img.bpp;
+    this->_Format = img.Format;
+
+    try
+    {
+        _allocResources();
+
+        unsigned char *out = getPixelData();
+
+        memcpy(out,
+            ((Image *)&img)->getPixelData(), // Not cool :(
+            this->Height*this->Pitch);
+    }
+    catch (std::exception &e)
+    {
+        throw e;
+    }
+}
+
 Image::~Image()
 {
     _deallocResources();
 }
 
-bool Image::LoadFromFile(const char * file)
+int Image::LoadFromFile(const char * file)
 {
     FREE_IMAGE_FORMAT format = FIF_UNKNOWN;
 
@@ -110,13 +164,13 @@ bool Image::LoadFromFile(const char * file)
         format = FreeImage_GetFIFFromFilename(file);
 
     if (format == FIF_UNKNOWN)
-        throw std::exception("Unknown file format");
+        return -1;
 
     if (FreeImage_FIFSupportsReading(format))
         this->_fiBitmap = FreeImage_Load(format, file, 0);
 
     if (this->_fiBitmap == NULL)
-        throw std::exception("Unable to load image file");
+        return -1;
 
     bpp = FreeImage_GetBPP(this->_fiBitmap);
 
@@ -138,24 +192,24 @@ bool Image::LoadFromFile(const char * file)
 
     data = FreeImage_GetBits(this->_fiBitmap);
 
-    return true;
+    return 0;
 }
 
-bool Image::SaveToFile(const char * fileName)
+int Image::SaveToFile(const char * fileName)
 {
     FREE_IMAGE_FORMAT fiFormat;
 
     if (!_fiBitmap)
-        throw std::exception("Tried to save an uninitialized image");
+        return -1;
 
     fiFormat = FreeImage_GetFIFFromFilename(fileName);
 
     if (fiFormat == FIF_UNKNOWN)
         fiFormat = FIF_JPEG;
 
-    if(!FreeImage_Save(fiFormat, _fiBitmap, fileName, 0))
-        throw std::exception("Unable to save file");
+    if (!FreeImage_Save(fiFormat, _fiBitmap, fileName, 0))
+        return -1;
 
-    return true;
+    return 0;
 }
 

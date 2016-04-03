@@ -58,7 +58,7 @@ void UpdateEyePositionFromMouse()
 /* GLUT callback functions */
 void Render()
 {
-    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+    glClearColor(0.1f, 0.1f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glLoadIdentity();
@@ -66,24 +66,26 @@ void Render()
     UpdateEyePositionFromMouse();
     g_Camera.SetPrespective();
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
     glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
+    
     for (unsigned int i = 0; i < g_Scene.numMeshes(); i++)
     {
         Mesh *m = &g_Scene.mesh[i];
 
+        /* Setup Geometry */
         glVertexPointer(3, GL_FLOAT, sizeof(Vertex), &m->vertex[0].position.d);
-        glColorPointer(3, GL_FLOAT, sizeof(Vertex), &m->vertex[0].diffuse.d);
         glNormalPointer(GL_FLOAT, sizeof(Vertex), &m->vertex[0].normal.d);
         glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), &m->vertex[0].tex);
 
-        glDrawElements(GL_TRIANGLES, m->numIndices(), GL_UNSIGNED_INT, &m->index[0]);
+        /* Setup Material */
+        Material *mat = &g_Scene.material[m->materialIdx];
+        glColor3f(mat->Color.diffuse.r, mat->Color.diffuse.g, mat->Color.diffuse.b);
 
+
+
+        glDrawElements(GL_TRIANGLES, (GLint)m->numIndices(), GL_UNSIGNED_INT, &m->index[0]);
     }
 
     TwDraw();
