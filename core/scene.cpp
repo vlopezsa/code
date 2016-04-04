@@ -43,12 +43,15 @@ bool Scene::loadFromFile(char * strFile)
 
     pScene = aiImportFileExWithProperties(strFile,
         //aiProcessPreset_TargetRealtime_Quality |
-        aiProcess_FixInfacingNormals |
-        aiProcess_JoinIdenticalVertices |
-        aiProcess_PreTransformVertices |
+        //aiProcess_JoinIdenticalVertices |
+        //aiProcess_PreTransformVertices |
         aiProcess_Triangulate |
-        aiProcess_GenSmoothNormals |
+        //aiProcess_GenSmoothNormals |
         aiProcess_FindDegenerates |
+        aiProcess_FindInvalidData |
+        //aiProcess_RemoveRedundantMaterials |
+        //aiProcess_GenUVCoords |
+        aiProcess_SortByPType |
         0,
         NULL,
         pStore); 
