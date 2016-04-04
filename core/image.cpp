@@ -189,7 +189,7 @@ int Image::LoadFromFile(const char * file)
         this->_fiBitmap = fiConv;
     }
 
-    this->_bpp    = bpp;
+    this->_bpp    = FreeImage_GetBPP(this->_fiBitmap);
     this->_Width  = FreeImage_GetWidth(this->_fiBitmap);
     this->_Height = FreeImage_GetHeight(this->_fiBitmap);
     this->_Pitch  = FreeImage_GetPitch(this->_fiBitmap);
