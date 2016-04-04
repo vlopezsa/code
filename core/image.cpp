@@ -35,7 +35,7 @@ void Image::_allocResources()
         throw std::exception("Unable to allocate memory");
     }
 
-    data = FreeImage_GetBits(_fiBitmap);
+    _data = FreeImage_GetBits(_fiBitmap);
     _Pitch = FreeImage_GetPitch(_fiBitmap);
 }
 
@@ -45,7 +45,7 @@ void Image::_deallocResources()
     {
         FreeImage_Unload(_fiBitmap);
         _fiBitmap = NULL;
-        data = NULL;
+        _data = NULL;
     }
 }
 
@@ -54,14 +54,15 @@ Image::Image() :
     Height(_Height),
     bpp(_bpp),
     Format(_Format),
-    Pitch(_Pitch)
+    Pitch(_Pitch),
+    Data(_data)
 {
     this->_Width  = 0;
     this->_Height = 0;
     this->_bpp    = 0;
     this->_Format = Img_Pixel_RGB;
 
-    data = NULL;
+    _data = NULL;
     _fiBitmap = NULL;
 
     this->_Pitch = 0;
@@ -72,7 +73,8 @@ Image::Image(const Image & img) :
     Height(_Height),
     bpp(_bpp),
     Format(_Format),
-    Pitch(_Pitch)
+    Pitch(_Pitch),
+    Data(_data)
 {
     this->_Width = img.Width;
     this->_Height = img.Height;
@@ -83,11 +85,10 @@ Image::Image(const Image & img) :
     {
         _allocResources();
 
-        unsigned char *out = getPixelData();
-
+        unsigned char *out = this->_data;
 
         memcpy(out,
-            ((Image *)&img)->getPixelData(), // Not cool :(
+            img.Data,
             this->Height*this->Pitch);
     }
     catch (std::exception &e)
@@ -101,14 +102,15 @@ Image::Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat for
     Height(_Height),
     bpp(_bpp),
     Format(_Format),
-    Pitch(_Pitch)
+    Pitch(_Pitch),
+    Data(_data)
 {
     this->_Width = newWidth;
     this->_Height = newHeight;
     this->_bpp = newBpp;
     this->_Format = format;
 
-    data = NULL;
+    _data = NULL;
     _fiBitmap = NULL;
 
     try
@@ -134,16 +136,18 @@ Image & Image::operator=(Image & img)
     {
         _allocResources();
 
-        unsigned char *out = getPixelData();
+        unsigned char *out = getData();
 
         memcpy(out,
-            ((Image *)&img)->getPixelData(), // Not cool :(
+            img.Data, // Not cool :(
             this->Height*this->Pitch);
     }
     catch (std::exception &e)
     {
         throw e;
     }
+
+    return *this;
 }
 
 Image::~Image()
@@ -190,7 +194,7 @@ int Image::LoadFromFile(const char * file)
     this->_Pitch  = FreeImage_GetPitch(this->_fiBitmap);
     this->_Format = ImagePixelFormat::Img_Pixel_RGB;
 
-    data = FreeImage_GetBits(this->_fiBitmap);
+    this->_data = FreeImage_GetBits(this->_fiBitmap);
 
     return 0;
 }

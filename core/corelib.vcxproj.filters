@@ -25,6 +25,9 @@
     <Filter Include="Camera">
       <UniqueIdentifier>{36af5edf-450f-4153-b299-78489244c92e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Render">
+      <UniqueIdentifier>{48e5a9e8-d1ea-4c1d-95e5-e215cf4d4291}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics.h">
@@ -81,6 +84,9 @@
     <ClInclude Include="texturemgr.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="render.h">
+      <Filter>Render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thirdparty.cpp">
@@ -133,6 +139,9 @@
     </ClCompile>
     <ClCompile Include="texturemgr.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="render.cpp">
+      <Filter>Render</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

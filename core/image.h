@@ -9,7 +9,7 @@ enum ImagePixelFormat __IMGPIXFMT_DEF;
 class Image
 {
 private:
-    unsigned char *data;
+    unsigned char *_data;
     unsigned int  _Width;
     unsigned int  _Height;
     unsigned int  _bpp;
@@ -25,6 +25,7 @@ public:
     const unsigned int &bpp;    // Bits per pixel
     const ImagePixelFormat &Format; // Pixel format
     const unsigned int &Pitch;
+    unsigned char * const &Data;
 
 private:
     void _allocResources();
@@ -43,6 +44,7 @@ public:
     int LoadFromFile(const char *fileName);
     int SaveToFile(const char *fileName);
 
-    unsigned char *getPixelData() { return data; }
+    unsigned char *getData() { return _data; }
+
 };
 

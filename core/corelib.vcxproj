@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="render.h" />
     <ClInclude Include="material.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="osutil.h" />
@@ -47,6 +48,7 @@
     <ClCompile Include="osutil.cpp" />
     <ClCompile Include="quaternion.cpp" />
     <ClCompile Include="rectsampler.cpp" />
+    <ClCompile Include="render.cpp" />
     <ClCompile Include="sampler.cpp" />
     <ClCompile Include="scene.cpp" />
     <ClCompile Include="shgeomerics.cpp" />

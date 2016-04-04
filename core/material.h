@@ -32,5 +32,8 @@ public:
     ~Material();
 
     int importAIMaterial(TextureManager *texMgr, aiMaterial *mat);
+
+    unsigned int getNumTexDiffuse() { return (unsigned int)texIdx.diffuse.size(); }
+    unsigned int getNumTexNormal() { return (unsigned int)texIdx.normal.size(); }
 };
 

@@ -7,17 +7,18 @@
 #include "mesh.h"
 #include "material.h"
 #include "texturemgr.h"
+#include "camera.h"
 
 class Scene {
 private:
     void __release();
 
 public:
-    std::string  strName;
-    std::vector<Mesh> mesh;
+    std::string           strName;
+    std::vector<Mesh>     mesh;
     std::vector<Material> material;
-
-    TextureManager  texture;
+    TextureManager        texture;
+    Camera                camera;
 
 public:
     Scene();

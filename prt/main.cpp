@@ -6,6 +6,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "render.h"
 #include "camera.h"
 #include "graphics.h"
 #include "osutil.h"
@@ -18,11 +19,14 @@ int g_winWidth  = 1024;
 int g_winHeight = 768;
 int g_winGlutID;
 
+/* Render related variables */
+Render g_Render;
+
 /* Scene related variables */
 Scene g_Scene;
 
 /* Camera related variables */
-Camera g_Camera;
+Camera *g_Camera = &g_Scene.camera;
 float camSpeed = 0.5f;
 bool MouseDown = false;
 int LastMouseX, LastMouseY, CurMouseX, CurMouseY;
@@ -42,8 +46,8 @@ void UpdateEyePositionFromMouse()
         dx = (float)(CurMouseX - LastMouseX);
         dy = (float)(CurMouseY - LastMouseY);
 
-        g_Camera.ChangeHeading(0.2f * dx);
-        g_Camera.ChangePitch(0.2f * dy);
+        g_Camera->ChangeHeading(0.2f * dx);
+        g_Camera->ChangePitch(0.2f * dy);
         break;
 
     case GLUT_RIGHT_BUTTON:
@@ -56,40 +60,20 @@ void UpdateEyePositionFromMouse()
 }
 
 /* GLUT callback functions */
+
 void Render()
 {
-    glClearColor(0.1f, 0.1f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glLoadIdentity();
+    g_Render.clear({ 0.1f, 0.1f, 0.0f });
 
     UpdateEyePositionFromMouse();
-    g_Camera.SetPrespective();
 
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    for (unsigned int i = 0; i < g_Scene.numMeshes(); i++)
-    {
-        Mesh *m = &g_Scene.mesh[i];
+    g_Render.updateCamera(g_Camera);    
 
-        /* Setup Geometry */
-        glVertexPointer(3, GL_FLOAT, sizeof(Vertex), &m->vertex[0].position.d);
-        glNormalPointer(GL_FLOAT, sizeof(Vertex), &m->vertex[0].normal.d);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), &m->vertex[0].tex);
-
-        /* Setup Material */
-        Material *mat = &g_Scene.material[m->materialIdx];
-        glColor3f(mat->Color.diffuse.r, mat->Color.diffuse.g, mat->Color.diffuse.b);
-
-
-
-        glDrawElements(GL_TRIANGLES, (GLint)m->numIndices(), GL_UNSIGNED_INT, &m->index[0]);
-    }
+    g_Render.renderScene(&g_Scene);
 
     TwDraw();
-    glutSwapBuffers();
+
+    g_Render.swapBuffers();
 }
 
 void ChangeSize(GLsizei w, GLsizei h) {
@@ -136,30 +120,30 @@ void KeyEvent(unsigned char key, int x, int y)
         }
         break;
         case 'w': case 'W':
-            g_Camera.ChangeVelocity(camSpeed);
+            g_Camera->ChangeVelocity(camSpeed);
             break;
         case 's': case 'S':
-            g_Camera.ChangeVelocity(camSpeed*-1.0f);
+            g_Camera->ChangeVelocity(camSpeed*-1.0f);
             break;
         case 'a': case 'A':
         {
-            float Heading = (float)((g_Camera.m_HeadingDegrees - 90.0f) / 180.0f * M_PI);
+            float Heading = (float)((g_Camera->m_HeadingDegrees - 90.0f) / 180.0f * M_PI);
             float x = sin(Heading);
             float z = cos(Heading);
 
-            g_Camera.m_Position.x += x*camSpeed;
-            g_Camera.m_Position.z += z*camSpeed;
+            g_Camera->m_Position.x += x*camSpeed;
+            g_Camera->m_Position.z += z*camSpeed;
         }
         break;
 
         case 'd': case 'D':
         {
-            float Heading = (float)((g_Camera.m_HeadingDegrees + 90.0f) / 180.0f * M_PI);
+            float Heading = (float)((g_Camera->m_HeadingDegrees + 90.0f) / 180.0f * M_PI);
             float x = sin(Heading);
             float z = cos(Heading);
 
-            g_Camera.m_Position.x += x*camSpeed;
-            g_Camera.m_Position.z += z*camSpeed;
+            g_Camera->m_Position.x += x*camSpeed;
+            g_Camera->m_Position.z += z*camSpeed;
         }
         break;
     }
@@ -217,15 +201,15 @@ void glutSetup()
 
 void cameraSetup()
 {
-    g_Camera.m_MaxForwardVelocity = 100.0f;
-    g_Camera.m_MaxPitchRate = 5.0f;
-    g_Camera.m_MaxHeadingRate = 5.0f;
-    g_Camera.m_PitchDegrees = -2.600001f;
-    g_Camera.m_HeadingDegrees = 49.199955f;
+    g_Camera->m_MaxForwardVelocity = 100.0f;
+    g_Camera->m_MaxPitchRate = 5.0f;
+    g_Camera->m_MaxHeadingRate = 5.0f;
+    g_Camera->m_PitchDegrees = -2.600001f;
+    g_Camera->m_HeadingDegrees = 49.199955f;
 
-    g_Camera.m_Position.x = 0.0f;
-    g_Camera.m_Position.y = 0.0f;
-    g_Camera.m_Position.z = 0.0f;
+    g_Camera->m_Position.x = 0.0f;
+    g_Camera->m_Position.y = 0.0f;
+    g_Camera->m_Position.z = 0.0f;
 }
 
 void CleanUp()
