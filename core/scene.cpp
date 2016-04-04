@@ -42,7 +42,13 @@ bool Scene::loadFromFile(char * strFile)
     aiSetImportPropertyInteger(pStore, AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
     pScene = aiImportFileExWithProperties(strFile,
-        aiProcessPreset_TargetRealtime_Quality |
+        //aiProcessPreset_TargetRealtime_Quality |
+        aiProcess_FixInfacingNormals |
+        aiProcess_JoinIdenticalVertices |
+        aiProcess_PreTransformVertices |
+        aiProcess_Triangulate |
+        aiProcess_GenSmoothNormals |
+        aiProcess_FindDegenerates |
         0,
         NULL,
         pStore); 
