@@ -44,7 +44,7 @@ unsigned int Render::_addGPUTexture(unsigned int texIdx)
             img->Width,
             img->Height,
             0,
-            GL_RGB,
+            GL_BGR,
             GL_UNSIGNED_BYTE,
             img->Data
             );

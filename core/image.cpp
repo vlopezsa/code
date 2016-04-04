@@ -123,7 +123,7 @@ Image::Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat for
     }
 }
 
-Image & Image::operator=(Image & img)
+Image & Image::operator=(const Image & img)
 {
     _deallocResources();
 
@@ -139,7 +139,7 @@ Image & Image::operator=(Image & img)
         unsigned char *out = getData();
 
         memcpy(out,
-            img.Data, // Not cool :(
+            img.Data,
             this->Height*this->Pitch);
     }
     catch (std::exception &e)
@@ -177,8 +177,9 @@ int Image::LoadFromFile(const char * file)
         return -1;
 
     bpp = FreeImage_GetBPP(this->_fiBitmap);
+    FREE_IMAGE_COLOR_TYPE fict = FreeImage_GetColorType(this->_fiBitmap);
 
-    if (bpp != 24)
+    if (bpp != 24 || fict!=FIC_RGB)
     {
         FIBITMAP *fiConv = NULL;
 

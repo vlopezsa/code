@@ -37,7 +37,7 @@ public:
 
     Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat format, unsigned int newBpp);
 
-    Image &operator = (Image &img);
+    Image &operator = (const Image &img);
 
     ~Image();
 
