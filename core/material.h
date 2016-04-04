@@ -24,6 +24,8 @@ public :
     struct {
         std::vector<unsigned int> diffuse;
         std::vector<unsigned int> normal;
+        std::vector<unsigned int> specular;
+        std::vector<unsigned int> mask;
     }texIdx;
 
 
@@ -35,5 +37,7 @@ public:
 
     unsigned int getNumTexDiffuse() { return (unsigned int)texIdx.diffuse.size(); }
     unsigned int getNumTexNormal() { return (unsigned int)texIdx.normal.size(); }
+    unsigned int getNumTexSpecular() { return (unsigned int)texIdx.specular.size(); }
+    unsigned int getNumTexMask() { return (unsigned int)texIdx.mask.size(); }
 };
 

@@ -74,11 +74,39 @@ int Material::importAIMaterial(TextureManager *texMgr, aiMaterial * mat)
         }
     }
 
-    /* Just for debug */
+    /* Specular maps */
     ntex = mat->GetTextureCount(aiTextureType_SPECULAR);
+    for (unsigned int i = 0; i < ntex; i++)
+    {
+        aiString strFile;
+
+        if (mat->GetTexture(aiTextureType_SPECULAR, i, &strFile, NULL, NULL, NULL, NULL, NULL)
+            == AI_SUCCESS)
+        {
+            unsigned int idx = texMgr->addTextureFromFile(strFile.C_Str());
+            if (idx != TEXTURE_INVALID)
+                texIdx.specular.push_back(idx);
+        }
+    }
+
+    /* Opacity (mask) maps */
+    ntex = mat->GetTextureCount(aiTextureType_OPACITY);
+    for (unsigned int i = 0; i < ntex; i++)
+    {
+        aiString strFile;
+
+        if (mat->GetTexture(aiTextureType_OPACITY, i, &strFile, NULL, NULL, NULL, NULL, NULL)
+            == AI_SUCCESS)
+        {
+            unsigned int idx = texMgr->addTextureFromFile(strFile.C_Str());
+            if (idx != TEXTURE_INVALID)
+                texIdx.mask.push_back(idx);
+        }
+    }
+
+    /* Just for debug */    
     ntex = mat->GetTextureCount(aiTextureType_SHININESS);
     ntex = mat->GetTextureCount(aiTextureType_EMISSIVE);
-    ntex = mat->GetTextureCount(aiTextureType_OPACITY);
     ntex = mat->GetTextureCount(aiTextureType_LIGHTMAP);
     ntex = mat->GetTextureCount(aiTextureType_REFLECTION);
     ntex = mat->GetTextureCount(aiTextureType_UNKNOWN);

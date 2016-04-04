@@ -84,6 +84,9 @@ void Render::renderMesh(Mesh * m)
     glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), &m->vertex[0].tex.d);
 
     glDrawElements(GL_TRIANGLES, (GLint)m->numIndices(), GL_UNSIGNED_INT, &m->index[0]);
+
+    glClientActiveTextureARB(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Render::setupMaterial(Material * mat)
