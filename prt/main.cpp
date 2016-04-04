@@ -212,6 +212,20 @@ void cameraSetup()
     g_Camera->m_Position.z = 0.0f;
 }
 
+void toolBoxSetup()
+{
+    TwBar *bar = TwNewBar("Info & Options");
+    TwDefine(" GLOBAL help='PRT Simple Example' ");
+    TwDefine(" 'Info & Options' size='200 200' color='96 216 224' ");
+
+    TwAddSeparator(bar, "cam separator", "group='Camera'");
+
+    TwAddVarRW(bar, "CamSpeed", TW_TYPE_FLOAT, &camSpeed, "group='Camera'");
+    TwAddVarRW(bar, "CamPosX", TW_TYPE_FLOAT, &g_Camera->m_Position.x, "group='Camera'");
+    TwAddVarRW(bar, "CamPosY", TW_TYPE_FLOAT, &g_Camera->m_Position.y, "group='Camera'");
+    TwAddVarRW(bar, "CamPosZ", TW_TYPE_FLOAT, &g_Camera->m_Position.z, "group='Camera'");
+}
+
 void CleanUp()
 {
     endThirdParty();
@@ -225,6 +239,8 @@ int main(int argc, char **argv)
     glutSetup();
 
     cameraSetup();
+
+    toolBoxSetup();
 
     // Run GLUT loop and hence the application
     glutMainLoop();   
