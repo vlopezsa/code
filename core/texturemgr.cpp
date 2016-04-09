@@ -8,29 +8,53 @@ TextureManager::~TextureManager()
 {
 }
 
-unsigned int TextureManager::addTextureFromFile(const char * strFile)
+uint32_t TextureManager::addTextureFromFile(const char * strFile)
 {
     /* If the file is already loaded, just return its current ID */
     if (texFileMap.find(strFile) != texFileMap.end())
         return texFileMap[strFile];
 
     /* ID assigned to each texture is its position inside our img list */
-    unsigned int curID = (unsigned int)imgList.size();
+    uint32_t curID = (uint32_t)imgList.size();
 
-    imgList.resize(curID+1);
+    Image *img = new Image();
 
-    if (imgList[curID].LoadFromFile(strFile))
+    if (img->LoadFromFile(strFile))
     {
-        imgList.pop_back();
+        delete img;
         return TEXTURE_INVALID;
     }
+
+    imgList.push_back(img);
 
     texFileMap[strFile] = curID;
 
     return curID;
 }
 
-unsigned int TextureManager::getTexturId(char * strFile)
+uint32_t TextureManager::addTextureFromImg(Image * img, const char *texName)
+{
+    if (!texName)
+        return TEXTURE_INVALID;
+
+    /* If the file is already loaded, just return its current ID */
+    if (texFileMap.find(texName) != texFileMap.end())
+        return texFileMap[texName];
+
+    /* ID assigned to each texture is its position inside our img list */
+    uint32_t curID = (uint32_t)imgList.size();
+
+    if (!img)
+        return TEXTURE_INVALID;
+
+    imgList.push_back(img);
+
+    texFileMap[texName] = curID;
+
+    return curID;
+}
+
+uint32_t TextureManager::getTexturId(char * strFile)
 {
     if (texFileMap.find(strFile) != texFileMap.end())
         return texFileMap[strFile];
@@ -38,20 +62,20 @@ unsigned int TextureManager::getTexturId(char * strFile)
     return TEXTURE_INVALID;
 }
 
-const Image * TextureManager::getTextureImage(char * strFile)
+Image * TextureManager::getTextureImage(char * strFile)
 {
     if (texFileMap.find(strFile) != texFileMap.end())
-        return &imgList[texFileMap[strFile]];
+        return imgList[texFileMap[strFile]];
 
     return nullptr;
 }
 
-const Image * TextureManager::getTextureImage(unsigned int ID)
+Image * TextureManager::getTextureImage(uint32_t ID)
 {
     if (ID >= imgList.size())
         return nullptr;
 
-    return &imgList[ID];
+    return imgList[ID];
 }
 
 

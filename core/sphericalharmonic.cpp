@@ -32,7 +32,7 @@ SphericalHarmonic::SphericalHarmonic(SHImplementation type, Sampler *sampler) :
     _numBaseCoeff = 0; //it will calculated later
 }
 
-SphericalHarmonic::SphericalHarmonic(SHImplementation type, Sampler * sampler, unsigned int nBands) :
+SphericalHarmonic::SphericalHarmonic(SHImplementation type, Sampler * sampler, uint32_t nBands) :
     shType(_shType),
     Coefficient(_Coefficient),
     numBands(_numBands),
@@ -66,7 +66,7 @@ void SphericalHarmonic::calculateNumberBaseCoeff()
     this->_numBaseCoeff = (this->_numBands+1) * (this->_numBands+1);
 }
 
-void SphericalHarmonic::setNumBands(unsigned int numBands)
+void SphericalHarmonic::setNumBands(uint32_t numBands)
 {
     this->_numBands = numBands;
     this->calculateNumberBaseCoeff();
@@ -100,14 +100,14 @@ bool SphericalHarmonic::scaleFunctionCoeff(std::vector<Vector3>& fCoeff)
     return true;
 }
 
-float SphericalHarmonic::calculateBasis(unsigned int l, int m, const SamplePoint *s)
+float SphericalHarmonic::calculateBasis(uint32_t l, int m, const SamplePoint *s)
 {
     return 0.0f;
 }
 
 void SphericalHarmonic::calculateCoefficients()
 {
-    unsigned int i;
+    uint32_t i;
     int cnt;
 
     this->calculateNumberBaseCoeff();

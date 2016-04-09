@@ -3,20 +3,37 @@
 #include <assimp\config.h>
 #include <assimp\postprocess.h>
 
+#include <vector>
+
 #include "scene.h"
+#include "bvh.h"
+#include "triangleobj.h"
 
 void Scene::__release()
 {
     mesh.clear();
     material.clear();
+
+    bvh = NULL;
+}
+
+void Scene::__calculteTriangleTotal()
+{
+    triTotal = 0;
+
+    for (int i = 0; i < mesh.size(); i++)
+        triTotal += (uint32_t)mesh[i].numTriangles();
 }
 
 Scene::Scene()
 {
+    triTotal = 0;
 }
 
 Scene::Scene(char * strFile)
 {
+    triTotal = 0;
+
     try {
         loadFromFile(strFile);
     }
@@ -70,14 +87,14 @@ bool Scene::loadFromFile(char * strFile)
 
     mesh.resize(pScene->mNumMeshes);
     
-    for (unsigned int i=0; i < mesh.size(); i++)
+    for (uint32_t i=0; i < mesh.size(); i++)
     {
         mesh[i].importAIMesh(pScene->mMeshes[i]);
     }
 
     /* Loading materials */
     material.resize(pScene->mNumMaterials);
-    for (unsigned int i = 0; i < pScene->mNumMaterials; i++)
+    for (uint32_t i = 0; i < pScene->mNumMaterials; i++)
     {
         material[i].importAIMaterial(&texture, pScene->mMaterials[i]);
     }
@@ -85,5 +102,27 @@ bool Scene::loadFromFile(char * strFile)
     aiReleaseImport(pScene);
     aiReleasePropertyStore(pStore);
 
-    return false;
+    __calculteTriangleTotal();
+
+    return true;
+}
+
+void Scene::buildBVH()
+{
+    if (bvh)
+        delete bvh;
+
+    
+    trilist.clear();
+    trilist.reserve(triTotal);
+
+    for (uint32_t i = 0; i < mesh.size(); i++)
+    {
+        for (uint32_t j = 0; j < mesh[i].numTriangles(); j++)
+        {
+            trilist.push_back(new TriangleObj(&mesh[i], i, j));
+        }
+    }
+
+    bvh = new BVH(&trilist);
 }

@@ -24,7 +24,12 @@ Camera::~Camera()
 
 }
 
-void Camera::SetPrespective()
+void Camera::SetPosition(Vector3 & Pos)
+{
+    m_Position = Pos;
+}
+
+void Camera::SetPerspective()
 {
     float Matrix[16];
     Quaternion q;
@@ -37,13 +42,14 @@ void Camera::SetPrespective()
     q = m_qPitch * m_qHeading;
     q.CreateMatrix(Matrix);
 
-    // Let OpenGL set our new prespective on the world!
+    // Let OpenGL set our new perspective on the world!
     glMultMatrixf(Matrix);
 
     // Create a matrix from the pitch Quaternion and get the j vector 
     // for our direction.
     m_qPitch.CreateMatrix(Matrix);
     m_DirectionVector.y = Matrix[9];
+    m_Up.y = Matrix[5];
 
     // Combine the heading and pitch rotations and make a matrix to get
     // the i and j vectors for our direction.
@@ -51,6 +57,8 @@ void Camera::SetPrespective()
     q.CreateMatrix(Matrix);
     m_DirectionVector.x = Matrix[8];
     m_DirectionVector.z = Matrix[10];
+    m_Up.x = Matrix[4];
+    m_Up.z = Matrix[6];
 
     // Scale the direction by our speed.
     m_DirectionVector *= m_ForwardVelocity;

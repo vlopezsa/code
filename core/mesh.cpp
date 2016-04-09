@@ -27,6 +27,7 @@ void Mesh::setNumTriangles(int numTriangle)
     try
     {
         this->triangle.resize(numTriangle);
+        this->index.resize(numTriangle * 3);
     }
     catch (std::exception &e)
     {
@@ -57,6 +58,11 @@ void Mesh::addTriangle(int pos, Triangle & t)
         triangle[pos].v1 = t.v1;
         triangle[pos].v2 = t.v2;
         triangle[pos].v3 = t.v3;
+
+        uint32_t idxPos = pos * 3;
+        index[idxPos++] = t.v1;
+        index[idxPos++] = t.v2;
+        index[idxPos++] = t.v3;
     }
     catch (std::exception &e)
     {
@@ -76,10 +82,10 @@ void Mesh::importAIMesh(const aiMesh *mesh)
         triangle.resize(mesh->mNumFaces);
         index.resize(mesh->mNumFaces * 3);
 
-        unsigned int texCoordIdx = AI_MAX_NUMBER_OF_TEXTURECOORDS;
-        unsigned int colorIdx = AI_MAX_NUMBER_OF_COLOR_SETS;
+        uint32_t texCoordIdx = AI_MAX_NUMBER_OF_TEXTURECOORDS;
+        uint32_t colorIdx = AI_MAX_NUMBER_OF_COLOR_SETS;
 
-        for (unsigned int i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; i++)
+        for (uint32_t i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; i++)
         {
             if (mesh->HasTextureCoords(i))
             {
@@ -88,7 +94,7 @@ void Mesh::importAIMesh(const aiMesh *mesh)
             }
         }
 
-        for (unsigned int i = 0; i < AI_MAX_NUMBER_OF_COLOR_SETS; i++)
+        for (uint32_t i = 0; i < AI_MAX_NUMBER_OF_COLOR_SETS; i++)
         {
             if (mesh->HasVertexColors(i))
             {
@@ -97,7 +103,7 @@ void Mesh::importAIMesh(const aiMesh *mesh)
             }
         }
 
-        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+        for (uint32_t i = 0; i < mesh->mNumVertices; i++)
         {
             vertex[i].position.x = mesh->mVertices[i].x;
             vertex[i].position.y = mesh->mVertices[i].y;
@@ -126,7 +132,7 @@ void Mesh::importAIMesh(const aiMesh *mesh)
 
         if (mesh->HasFaces())
         {
-            for (unsigned int i = 0, j=0; i < mesh->mNumFaces; i++)
+            for (uint32_t i = 0, j=0; i < mesh->mNumFaces; i++)
             {
                 triangle[i].v1 = mesh->mFaces[i].mIndices[0];
                 triangle[i].v2 = mesh->mFaces[i].mIndices[1];
@@ -135,6 +141,13 @@ void Mesh::importAIMesh(const aiMesh *mesh)
                 index[j++] = mesh->mFaces[i].mIndices[0];
                 index[j++] = mesh->mFaces[i].mIndices[1];
                 index[j++] = mesh->mFaces[i].mIndices[2];
+
+                triangle[i].normal = 
+                   (vertex[triangle[i].v1].normal +
+                    vertex[triangle[i].v1].normal +
+                    vertex[triangle[i].v1].normal) / 3.0f;
+
+                triangle[i].normal.normalize();
             }
         }        
 

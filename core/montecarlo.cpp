@@ -16,7 +16,7 @@ void MonteCarlo::calculateSamples()
 
     sN = (int)sqrt(this->numSamples);
 
-    srand((unsigned int)time(NULL));
+    srand((uint32_t)time(NULL));
 
     sCnt = 0;
 
@@ -48,7 +48,7 @@ void MonteCarlo::calculateSamples()
         }
 }
 
-MonteCarlo::MonteCarlo(unsigned int numSamples)
+MonteCarlo::MonteCarlo(uint32_t numSamples)
     : Sampler(numSamples)
 {
     calculateSamples();

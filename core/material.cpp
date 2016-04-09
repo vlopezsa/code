@@ -10,7 +10,7 @@ Material::~Material()
 
 int Material::importAIMaterial(TextureManager *texMgr, aiMaterial * mat)
 {
-    unsigned int ntex;
+    uint32_t ntex;
     aiString  aistr;
     aiColor3D color;
 
@@ -31,14 +31,14 @@ int Material::importAIMaterial(TextureManager *texMgr, aiMaterial * mat)
 
     /* Get diffuse textures */
     ntex = mat->GetTextureCount(aiTextureType_DIFFUSE);
-    for (unsigned int i = 0; i < ntex; i++)
+    for (uint32_t i = 0; i < ntex; i++)
     {
         aiString strFile;
 
         if (mat->GetTexture(aiTextureType_DIFFUSE, i, &strFile, NULL, NULL, NULL, NULL, NULL)
             == AI_SUCCESS)
         {
-            unsigned int idx = texMgr->addTextureFromFile(strFile.C_Str());
+            uint32_t idx = texMgr->addTextureFromFile(strFile.C_Str());
             if (idx != TEXTURE_INVALID)
                 texIdx.diffuse.push_back(idx);
         }
@@ -46,14 +46,14 @@ int Material::importAIMaterial(TextureManager *texMgr, aiMaterial * mat)
 
     /* Get normal-map textures */
     ntex = mat->GetTextureCount(aiTextureType_NORMALS);
-    for (unsigned int i = 0; i < ntex; i++)
+    for (uint32_t i = 0; i < ntex; i++)
     {
         aiString strFile;
 
         if (mat->GetTexture(aiTextureType_NORMALS, i, &strFile, NULL, NULL, NULL, NULL, NULL)
             == AI_SUCCESS)
         {
-            unsigned int idx = texMgr->addTextureFromFile(strFile.C_Str());
+            uint32_t idx = texMgr->addTextureFromFile(strFile.C_Str());
             if (idx != TEXTURE_INVALID)
                 texIdx.normal.push_back(idx);
         }
@@ -61,14 +61,14 @@ int Material::importAIMaterial(TextureManager *texMgr, aiMaterial * mat)
 
     /* Height maps (bump maps) are also stored as normal maps (to fix) */
     ntex = mat->GetTextureCount(aiTextureType_HEIGHT);
-    for (unsigned int i = 0; i < ntex; i++)
+    for (uint32_t i = 0; i < ntex; i++)
     {
         aiString strFile;
 
         if (mat->GetTexture(aiTextureType_HEIGHT, i, &strFile, NULL, NULL, NULL, NULL, NULL)
             == AI_SUCCESS)
         {
-            unsigned int idx = texMgr->addTextureFromFile(strFile.C_Str());
+            uint32_t idx = texMgr->addTextureFromFile(strFile.C_Str());
             if (idx != TEXTURE_INVALID)
                 texIdx.normal.push_back(idx);
         }
@@ -76,14 +76,14 @@ int Material::importAIMaterial(TextureManager *texMgr, aiMaterial * mat)
 
     /* Specular maps */
     ntex = mat->GetTextureCount(aiTextureType_SPECULAR);
-    for (unsigned int i = 0; i < ntex; i++)
+    for (uint32_t i = 0; i < ntex; i++)
     {
         aiString strFile;
 
         if (mat->GetTexture(aiTextureType_SPECULAR, i, &strFile, NULL, NULL, NULL, NULL, NULL)
             == AI_SUCCESS)
         {
-            unsigned int idx = texMgr->addTextureFromFile(strFile.C_Str());
+            uint32_t idx = texMgr->addTextureFromFile(strFile.C_Str());
             if (idx != TEXTURE_INVALID)
                 texIdx.specular.push_back(idx);
         }
@@ -91,14 +91,14 @@ int Material::importAIMaterial(TextureManager *texMgr, aiMaterial * mat)
 
     /* Opacity (mask) maps */
     ntex = mat->GetTextureCount(aiTextureType_OPACITY);
-    for (unsigned int i = 0; i < ntex; i++)
+    for (uint32_t i = 0; i < ntex; i++)
     {
         aiString strFile;
 
         if (mat->GetTexture(aiTextureType_OPACITY, i, &strFile, NULL, NULL, NULL, NULL, NULL)
             == AI_SUCCESS)
         {
-            unsigned int idx = texMgr->addTextureFromFile(strFile.C_Str());
+            uint32_t idx = texMgr->addTextureFromFile(strFile.C_Str());
             if (idx != TEXTURE_INVALID)
                 texIdx.mask.push_back(idx);
         }

@@ -8,7 +8,7 @@ SHStandard::SHStandard(Sampler * s)
 {
 }
 
-SHStandard::SHStandard(Sampler * sampler, unsigned int numBands)
+SHStandard::SHStandard(Sampler * sampler, uint32_t numBands)
     : SphericalHarmonic(SHImplementation::SH_Standard, sampler, numBands)
 {
 }
@@ -63,10 +63,10 @@ double P(int l, int m, float x)
 //     Journal of Computer Graphics Techniques (JCGT), vol. 2,
 //     no. 2, pp. 84–83, Sep. 2013.
 
-double K(unsigned int l, int m) {
+double K(uint32_t l, int m) {
     double uVal = 1;// must be double
 
-    for (unsigned int k = l + m; k > (l - m); k--)
+    for (uint32_t k = l + m; k > (l - m); k--)
         uVal *= k;
 
     return sqrt((2.0 * l + 1.0) / (4 * M_PI * uVal));
@@ -86,7 +86,7 @@ double __inline SH(int l, int m, float theta, float phi)
     return res;
 }
 
-float SHStandard::calculateBasis(unsigned int l, int m, const SamplePoint * s)
+float SHStandard::calculateBasis(uint32_t l, int m, const SamplePoint * s)
 {
     return (float)SH(l, m, s->Spherical.theta, s->Spherical.phi);
 }

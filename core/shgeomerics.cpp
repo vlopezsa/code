@@ -18,7 +18,7 @@ SHGeomerics::SHGeomerics(Sampler * sampler)
 
 }
 
-SHGeomerics::SHGeomerics(Sampler * sampler, unsigned int numBands)
+SHGeomerics::SHGeomerics(Sampler * sampler, uint32_t numBands)
     : SphericalHarmonic(SHImplementation::SH_Geomerics, sampler, numBands)
 {
     // This implementations has a limit of 2
@@ -44,7 +44,7 @@ void SHGeomerics::calculateNumberBaseCoeff()
     this->_numBaseCoeff = (this->numBands + 1) * (this->numBands + 1);
 }
 
-float SHGeomerics::calculateBasis(unsigned int l, int m, const SamplePoint * s)
+float SHGeomerics::calculateBasis(uint32_t l, int m, const SamplePoint * s)
 {
     // In the explanation only up to L2 is defined
     // For testing purposes, i'll leave it up to that level

@@ -97,7 +97,7 @@ Image::Image(const Image & img) :
     }
 }
 
-Image::Image(unsigned int newWidth, unsigned int newHeight, ImagePixelFormat format, unsigned int newBpp) :
+Image::Image(uint32_t newWidth, uint32_t newHeight, ImagePixelFormat format, uint32_t newBpp) :
     Width(_Width),
     Height(_Height),
     bpp(_bpp),
@@ -159,7 +159,7 @@ int Image::LoadFromFile(const char * file)
 {
     FREE_IMAGE_FORMAT format = FIF_UNKNOWN;
 
-    unsigned int   bpp;
+    uint32_t   bpp;
 
     _deallocResources();
 

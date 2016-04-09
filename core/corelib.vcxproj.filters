@@ -28,64 +28,91 @@
     <Filter Include="Render">
       <UniqueIdentifier>{48e5a9e8-d1ea-4c1d-95e5-e215cf4d4291}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BVH">
+      <UniqueIdentifier>{bcbf03c5-287d-48d6-80b9-9d99529fe5ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="graphics.h">
+    <ClInclude Include="include\IntersectionInfo.h">
+      <Filter>BVH</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Log.h">
+      <Filter>BVH</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Object.h">
+      <Filter>BVH</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Ray.h">
+      <Filter>BVH</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BBox.h">
+      <Filter>BVH</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BVH.h">
+      <Filter>BVH</Filter>
+    </ClInclude>
+    <ClInclude Include="include\graphics.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="thirdparty.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="montecarlo.h">
-      <Filter>Sampler</Filter>
-    </ClInclude>
-    <ClInclude Include="rectsampler.h">
-      <Filter>Sampler</Filter>
-    </ClInclude>
-    <ClInclude Include="sampler.h">
-      <Filter>Sampler</Filter>
-    </ClInclude>
-    <ClInclude Include="image.h">
+    <ClInclude Include="include\image.h">
       <Filter>Image</Filter>
     </ClInclude>
-    <ClInclude Include="vector3.h">
+    <ClInclude Include="include\material.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="include\montecarlo.h">
+      <Filter>Sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mesh.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="include\quaternion.h">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="vector2.h">
-      <Filter>Math</Filter>
+    <ClInclude Include="include\rectsampler.h">
+      <Filter>Sampler</Filter>
     </ClInclude>
-    <ClInclude Include="sphericalharmonic.h">
+    <ClInclude Include="include\render.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="include\sampler.h">
+      <Filter>Sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="include\scene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="include\shgeomerics.h">
       <Filter>SH</Filter>
     </ClInclude>
-    <ClInclude Include="osutil.h">
-      <Filter>OS Util</Filter>
+    <ClInclude Include="include\shstandard.h">
+      <Filter>SH</Filter>
     </ClInclude>
-    <ClInclude Include="scene.h">
+    <ClInclude Include="include\sphericalharmonic.h">
+      <Filter>SH</Filter>
+    </ClInclude>
+    <ClInclude Include="include\texturemgr.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="mesh.h">
-      <Filter>Scene</Filter>
+    <ClInclude Include="include\thirdparty.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="camera.h">
+    <ClInclude Include="include\vector2.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vector3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vector4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\triangleobj.h">
+      <Filter>BVH</Filter>
+    </ClInclude>
+    <ClInclude Include="include\camera.h">
       <Filter>Camera</Filter>
     </ClInclude>
-    <ClInclude Include="quaternion.h">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="shstandard.h">
-      <Filter>SH</Filter>
-    </ClInclude>
-    <ClInclude Include="shgeomerics.h">
-      <Filter>SH</Filter>
-    </ClInclude>
-    <ClInclude Include="material.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="texturemgr.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="render.h">
-      <Filter>Render</Filter>
+    <ClInclude Include="include\osutil.h">
+      <Filter>OS Util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +169,15 @@
     </ClCompile>
     <ClCompile Include="render.cpp">
       <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="BVH\BBox.cpp">
+      <Filter>BVH</Filter>
+    </ClCompile>
+    <ClCompile Include="BVH\BVH.cpp">
+      <Filter>BVH</Filter>
+    </ClCompile>
+    <ClCompile Include="BVH\triangleobj.cpp">
+      <Filter>BVH</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

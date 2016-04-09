@@ -40,7 +40,7 @@ void RectSampler::calculateSamples()
         }
 }
 
-RectSampler::RectSampler(unsigned int Width, unsigned int Height)
+RectSampler::RectSampler(uint32_t Width, uint32_t Height)
     : Sampler(Width * Height),
       Width(_Width),
       Height(_Height)

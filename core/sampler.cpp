@@ -1,6 +1,6 @@
 #include "sampler.h"
 
-Sampler::Sampler(unsigned int numSamples) :
+Sampler::Sampler(uint32_t numSamples) :
     numSamples(_numSamples),
     Samples(_Samples)
 {
