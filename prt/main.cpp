@@ -96,7 +96,7 @@ void ChangeSize(GLsizei w, GLsizei h) {
     TwWindowSize(w, h);
 }
 
-void KeyEvent(unsigned char key, int x, int y)
+void KeyEvent(uint8_t key, int x, int y)
 {
     if (TwEventKeyboardGLUT(key, x, y))
         return;

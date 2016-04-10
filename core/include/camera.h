@@ -15,7 +15,7 @@ public:
     Quaternion m_qPitch;
     
     Vector3   m_Position;
-    Vector3   m_DirectionVector;
+    Vector3   m_Direction;
     Vector3   m_Right;
     Vector3   m_Up;
 

@@ -48,22 +48,6 @@ void TriangleObj::calculateBBox()
 
     mx = vmax(v0, v1);
     mx = vmax(mx, v2);
-  
-    /*if (v1.x < min.x) min.x = v1.x;
-    if (v1.y < min.y) min.y = v1.y;
-    if (v1.z < min.z) min.y = v1.z;
-
-    if (v2.x < min.x) min.x = v2.x;
-    if (v2.y < min.y) min.y = v2.y;
-    if (v2.z < min.z) min.y = v2.z;
-
-    if (v1.x > max.x) max.x = v1.x;
-    if (v1.y > max.y) max.y = v1.y;
-    if (v1.z > max.z) max.y = v1.z;
-
-    if (v2.x > max.x) max.x = v2.x;
-    if (v2.y > max.y) max.y = v2.y;
-    if (v2.z > max.z) max.y = v2.z;*/
 
     bbox.min = mn;
     bbox.max = mx;
@@ -73,24 +57,23 @@ void TriangleObj::calculateBBox()
 bool TriangleObj::getIntersection(const Ray & ray, IntersectionInfo * intersection) const
 {
     Vector4 e1, e2, p1, i1, t1, q1;
-    Vector4 v0, v1, v2;
     float det = 0.0f;
 
     uint32_t iv1, iv2, iv3;
 
     iv1 = mesh->triangle[triId].v1;
-    iv2 = mesh->triangle[triId].v1;
-    iv3 = mesh->triangle[triId].v1;
+    iv2 = mesh->triangle[triId].v2;
+    iv3 = mesh->triangle[triId].v3;
 
-    v0 = mesh->vertex[iv1].position;
-    v1 = mesh->vertex[iv1].position;
-    v2 = mesh->vertex[iv1].position;
+    const Vector4 &v0 = mesh->vertex[iv1].position;
+    const Vector4 &v1 = mesh->vertex[iv2].position;
+    const Vector4 &v2 = mesh->vertex[iv3].position;
 
     const Vector4 &p = ray.o;
     const Vector4 &d = ray.d;
 
     e1 = v1 - v0;
-    e2 = v2 - v1;
+    e2 = v2 - v0;
 
     p1 = d^e2;
 
@@ -121,7 +104,16 @@ bool TriangleObj::getIntersection(const Ray & ray, IntersectionInfo * intersecti
     i1.z *= det;
 
     if (i1.z > 0.000001f)
+    {
+        intersection->object = this;
+
+        intersection->t = i1.z;
+
+        intersection->bary.x = i1.x;
+        intersection->bary.y = i1.y;
+        intersection->bary.x = 1.0f - i1.x - i1.y;
         return true;
+    }
 
     return false;
 }

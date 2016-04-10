@@ -15,8 +15,8 @@
 
 /* Window related variables */
 char *g_strAppTitle = "OpenGL Simple";
-int g_winWidth  = 1024;
-int g_winHeight = 768;
+int g_winWidth  = 800;
+int g_winHeight = 800;
 int g_winGlutID;
 
 /* Render related variables */
@@ -61,9 +61,11 @@ void UpdateEyePositionFromMouse()
 
 /* GLUT callback functions */
 
-void Render()
+void RenderF()
 {
     g_Render.clear({ 0.1f, 0.1f, 0.0f });
+
+   // glLoadIdentity();
 
     UpdateEyePositionFromMouse();
 
@@ -96,7 +98,7 @@ void ChangeSize(GLsizei w, GLsizei h) {
     TwWindowSize(w, h);
 }
 
-void KeyEvent(unsigned char key, int x, int y)
+void KeyEvent(uint8_t key, int x, int y)
 {
     if (TwEventKeyboardGLUT(key, x, y))
         return;
@@ -110,6 +112,8 @@ void KeyEvent(unsigned char key, int x, int y)
             {
                 try {
                     g_Scene.loadFromFile(fileName);
+
+                    osDisplaySceneInfo(&g_Scene);
                 }
                 catch (std::exception &e)
                 {
@@ -144,6 +148,22 @@ void KeyEvent(unsigned char key, int x, int y)
 
             g_Camera->m_Position.x += x*camSpeed;
             g_Camera->m_Position.z += z*camSpeed;
+        }
+        break;
+
+        case 'r': case 'R':
+        {
+            g_Camera->m_Position.x += g_Camera->m_Up.x * camSpeed;
+            g_Camera->m_Position.y += g_Camera->m_Up.y * camSpeed;
+            g_Camera->m_Position.z += g_Camera->m_Up.z * camSpeed;
+        }
+        break;
+
+        case 'f': case 'F':
+        {
+            g_Camera->m_Position.x -= g_Camera->m_Up.x * camSpeed;
+            g_Camera->m_Position.y -= g_Camera->m_Up.y * camSpeed;
+            g_Camera->m_Position.z -= g_Camera->m_Up.z * camSpeed;
         }
         break;
     }
@@ -191,7 +211,7 @@ void glutSetup()
     g_winGlutID = glutCreateWindow(g_strAppTitle);
 
     glutReshapeFunc(ChangeSize);
-    glutDisplayFunc(Render);
+    glutDisplayFunc(RenderF);
     glutKeyboardFunc(KeyEvent);
     glutMouseFunc(MouseFunc);
     glutMotionFunc(MotionFunc);
@@ -204,12 +224,12 @@ void cameraSetup()
     g_Camera->m_MaxForwardVelocity = 100.0f;
     g_Camera->m_MaxPitchRate = 5.0f;
     g_Camera->m_MaxHeadingRate = 5.0f;
-    g_Camera->m_PitchDegrees = -2.600001f;
-    g_Camera->m_HeadingDegrees = 49.199955f;
+    g_Camera->m_PitchDegrees = 18.4;
+    g_Camera->m_HeadingDegrees = 45.2;
 
-    g_Camera->m_Position.x = 0.0f;
-    g_Camera->m_Position.y = 0.0f;
-    g_Camera->m_Position.z = 0.0f;
+    g_Camera->m_Position.x = -7.33895f;
+    g_Camera->m_Position.y = 2.70259f;
+    g_Camera->m_Position.z = -7.60264f;
 }
 
 void toolBoxSetup()
@@ -220,10 +240,12 @@ void toolBoxSetup()
 
     TwAddSeparator(bar, "cam separator", "group='Camera'");
 
-    TwAddVarRW(bar, "CamSpeed", TW_TYPE_FLOAT, &camSpeed, "group='Camera'");
-    TwAddVarRW(bar, "CamPosX", TW_TYPE_FLOAT, &g_Camera->m_Position.x, "group='Camera'");
-    TwAddVarRW(bar, "CamPosY", TW_TYPE_FLOAT, &g_Camera->m_Position.y, "group='Camera'");
-    TwAddVarRW(bar, "CamPosZ", TW_TYPE_FLOAT, &g_Camera->m_Position.z, "group='Camera'");
+    TwAddVarRW(bar, "Speed", TW_TYPE_FLOAT, &camSpeed, "group='Camera'");
+    TwAddVarRW(bar, "PosX", TW_TYPE_FLOAT, &g_Camera->m_Position.x, "group='Camera'");
+    TwAddVarRW(bar, "PosY", TW_TYPE_FLOAT, &g_Camera->m_Position.y, "group='Camera'");
+    TwAddVarRW(bar, "PosZ", TW_TYPE_FLOAT, &g_Camera->m_Position.z, "group='Camera'");
+    TwAddVarRW(bar, "Pitch", TW_TYPE_FLOAT, &g_Camera->m_PitchDegrees, "group='Camera'");
+    TwAddVarRW(bar, "Heading", TW_TYPE_FLOAT, &g_Camera->m_HeadingDegrees, "group='Camera'");
 }
 
 void CleanUp()

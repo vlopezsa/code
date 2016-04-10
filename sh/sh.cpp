@@ -236,7 +236,7 @@ void ReShapeFunc(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 }
 
-void KeyFunc(unsigned char k, int x, int y)
+void KeyFunc(uint8_t k, int x, int y)
 {
 	switch (k)
 	{

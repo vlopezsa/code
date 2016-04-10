@@ -85,7 +85,7 @@ Image::Image(const Image & img) :
     {
         _allocResources();
 
-        unsigned char *out = this->_data;
+        uint8_t *out = this->_data;
 
         memcpy(out,
             img.Data,
@@ -136,7 +136,7 @@ Image & Image::operator=(const Image & img)
     {
         _allocResources();
 
-        unsigned char *out = getData();
+        uint8_t *out = getData();
 
         memcpy(out,
             img.Data,

@@ -87,9 +87,9 @@ int main(int argc, char **argv)
 
         sh.calculateCoefficients();
 
-        unsigned char *out = imgOut.getPixelData();
-        unsigned char *rec = imgRec.getPixelData();
-        unsigned char *in = imgIn.getPixelData();
+        uint8_t *out = imgOut.getPixelData();
+        uint8_t *rec = imgRec.getPixelData();
+        uint8_t *in = imgIn.getPixelData();
 
         unsigned int i, j, c;
         int pxStep = imgOut.bpp / 8;
@@ -149,9 +149,9 @@ int main(int argc, char **argv)
 
                 c = imgC[i];
 
-                rec[c + 0] = (unsigned char)(clamp(colRec.r, 0.0f, 255.0f));
-                rec[c + 1] = (unsigned char)(clamp(colRec.g, 0.0f, 255.0f));
-                rec[c + 2] = (unsigned char)(clamp(colRec.b, 0.0f, 255.0f));
+                rec[c + 0] = (uint8_t)(clamp(colRec.r, 0.0f, 255.0f));
+                rec[c + 1] = (uint8_t)(clamp(colRec.g, 0.0f, 255.0f));
+                rec[c + 2] = (uint8_t)(clamp(colRec.b, 0.0f, 255.0f));
             }
         }
         else
@@ -171,9 +171,9 @@ int main(int argc, char **argv)
 
                 c = imgC[i];
 
-                rec[c + 0] = (unsigned char)(clamp(colRec.r, 0.0f, 255.0f));
-                rec[c + 1] = (unsigned char)(clamp(colRec.g, 0.0f, 255.0f));
-                rec[c + 2] = (unsigned char)(clamp(colRec.b, 0.0f, 255.0f));
+                rec[c + 0] = (uint8_t)(clamp(colRec.r, 0.0f, 255.0f));
+                rec[c + 1] = (uint8_t)(clamp(colRec.g, 0.0f, 255.0f));
+                rec[c + 2] = (uint8_t)(clamp(colRec.b, 0.0f, 255.0f));
             }
         }        
 

@@ -4,6 +4,12 @@
 # 3rd Party Tools
 3rd_party/
 
+# Image files
+*.png
+*.jpg
+*.tga
+*.bmp
+
 # User-specific files
 *.suo
 *.user
