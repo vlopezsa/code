@@ -8,13 +8,16 @@
     </ItemDefinitionGroup>
     <_PropertySheetDisplayName>common</_PropertySheetDisplayName>
     <OutDir>$(SolutionDir)bin$(PlatformArchitecture)\</OutDir>
-    <IncludePath>$(SolutionDir)\core;$(SolutionDir)\3rd_party\glut\include;$(SolutionDir)\3rd_party\glew\include;$(SolutionDir)\3rd_party\AntTweakBar\include;$(SolutionDir)\3rd_party\Assimp\include;$(SolutionDir)\3rd_party\FreeImage\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\core;$(SolutionDir)\core\include;$(SolutionDir)\3rd_party\glut\include;$(SolutionDir)\3rd_party\glew\include;$(SolutionDir)\3rd_party\AntTweakBar\include;$(SolutionDir)\3rd_party\Assimp\include;$(SolutionDir)\3rd_party\FreeImage\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\3rd_party\glut\lib$(PlatformArchitecture);$(SolutionDir)\3rd_party\glew\lib$(PlatformArchitecture);$(SolutionDir)\3rd_party\AntTweakBar\lib$(PlatformArchitecture);$(SolutionDir)\3rd_party\Assimp\lib$(PlatformArchitecture);$(SolutionDir)\3rd_party\FreeImage\lib$(PlatformArchitecture);$(SolutionDir)\bin$(PlatformArchitecture);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
       <AdditionalDependencies>FreeImage.lib;glew32.lib;assimp.lib;corelib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;NOMINMAX%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>
