@@ -13,6 +13,7 @@ private:
     Scene *scene;
     std::unordered_map<uint32_t, uint32_t> gpuTex;
 
+    bool   preComputedEnvLight;
 
 public:
     Render();
@@ -26,5 +27,7 @@ public:
     void setupMaterial(Material *mat);
     void renderMesh(Mesh *m);
     void renderScene(Scene *s);
+
+    void usePreComputedEnvLight(bool enable = false);
 };
 

@@ -7,8 +7,6 @@ class TriangleObj :
     public Object
 {
 private:
-    uint32_t meshId;
-    uint32_t triId;
     const Mesh *mesh;
 
     Vector4 centroid;
@@ -20,6 +18,9 @@ private:
 public:
     TriangleObj(const Mesh *m, uint32_t meshId, uint32_t triId);
     ~TriangleObj();
+
+    uint32_t meshId;
+    uint32_t triId;
 
     //! All "Objects" must be able to test for intersections with rays.
     bool getIntersection(

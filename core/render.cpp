@@ -9,6 +9,7 @@
 
 Render::Render()
 {
+    preComputedEnvLight = false;
 }
 
 Render::~Render()
@@ -66,6 +67,16 @@ void Render::updateCamera(Camera * cam)
     cam->SetPerspective();
 }
 
+void Render::usePreComputedEnvLight(bool enable)
+{
+    preComputedEnvLight = enable;
+
+    if(preComputedEnvLight)
+        glEnableClientState(GL_COLOR_ARRAY);
+    else
+        glDisableClientState(GL_COLOR_ARRAY);
+}
+
 float light_position[] = { 10.0f, 10.0f, 10.0f };
 float light_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -84,6 +95,10 @@ void Render::renderMesh(Mesh * m)
     glNormalPointer(GL_FLOAT, sizeof(Vertex), &m->vertex[0].normal.d);
     glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), &m->vertex[0].tex.d);
 
+    // Expecting the environment light intensity to be in the diffuse color;
+    if (preComputedEnvLight)
+        glColorPointer(3, GL_FLOAT, sizeof(Vertex), &m->vertex[0].diffuse.d);
+
     glDrawElements(GL_TRIANGLES, (GLint)m->numIndices(), GL_UNSIGNED_INT, &m->index[0]);
 
     glClientActiveTextureARB(GL_TEXTURE0);
@@ -95,7 +110,7 @@ void Render::setupMaterial(Material * mat)
     mat_diffuse[0] = mat->Color.diffuse.r;
     mat_diffuse[1] = mat->Color.diffuse.g;
     mat_diffuse[2] = mat->Color.diffuse.b;
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_diffuse);
+    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_diffuse);
 
     if (mat->getNumTexDiffuse() > 0)
     {
@@ -120,8 +135,17 @@ void Render::renderScene(Scene * s)
     /* setup global scene handler */
     this->scene = s;
 
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
+    if (preComputedEnvLight)
+    {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_LIGHT0);
+    }
+    else
+    {
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+    }
+    
     glShadeModel(GL_SMOOTH);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_NORMALIZE);

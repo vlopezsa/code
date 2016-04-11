@@ -6,7 +6,7 @@ class ImageLoader
 public:
 	static void Init();
 	static void Close();
-	static unsigned char *LoadFile(char *sFileName, int *out_Width, int *out_Height);
+	static uint8_t *LoadFile(char *sFileName, int *out_Width, int *out_Height);
 };
 
 #endif

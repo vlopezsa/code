@@ -87,9 +87,9 @@ int main(int argc, char **argv)
 
         sh.calculateCoefficients();
 
-        uint8_t *out = imgOut.getPixelData();
-        uint8_t *rec = imgRec.getPixelData();
-        uint8_t *in = imgIn.getPixelData();
+        uint8_t *out = imgOut.getData();
+        uint8_t *rec = imgRec.getData();
+        uint8_t *in = imgIn.getData();
 
         unsigned int i, j, c;
         int pxStep = imgOut.bpp / 8;

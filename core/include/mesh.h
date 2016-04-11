@@ -10,9 +10,9 @@ typedef struct
 {
     union
     {
-        int i[3];
-        struct { int a, b, c; };
-        struct { int v1, v2, v3; };
+        uint32_t i[3];
+        struct { uint32_t a, b, c; };
+        struct { uint32_t v1, v2, v3; };
     };
 
     Vector3 normal;
@@ -71,7 +71,7 @@ public:
 
     void importAIMesh(const aiMesh *dstMesh);
 
-    size_t numVertices() { return vertex.size(); }
-    size_t numTriangles() { return triangle.size(); }
-    size_t numIndices() { return index.size(); }
+    uint32_t numVertices() { return (uint32_t)vertex.size(); }
+    uint32_t numTriangles() { return (uint32_t)triangle.size(); }
+    uint32_t numIndices() { return (uint32_t)index.size(); }
 };

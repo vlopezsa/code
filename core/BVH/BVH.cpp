@@ -51,6 +51,7 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
         if (hit) {
           // If we're only looking for occlusion, then any hit is good enough
           if(occlusion) {
+            *intersection = current;
             return true;
           }
 

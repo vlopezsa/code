@@ -203,7 +203,7 @@ void ChangeSize(GLsizei w, GLsizei h) {
 }
 
 
-void KeyEvent(unsigned char key, int x, int y)
+void KeyEvent(uint8_t key, int x, int y)
 {
     switch (key)
     {
@@ -220,8 +220,8 @@ void KeyEvent(unsigned char key, int x, int y)
     case 'a': case 'A':
     {
         float Heading = (float)((Cam.m_HeadingDegrees - 90.0f) / 180.0f * PI);
-        float x = sin(Heading);
-        float z = cos(Heading);
+        float x = (float)sin(Heading);
+        float z = (float)cos(Heading);
 
         Cam.m_Position.x += x*camSpeed;
         Cam.m_Position.z += z*camSpeed;
@@ -231,8 +231,8 @@ void KeyEvent(unsigned char key, int x, int y)
     case 'd': case 'D':
     {
         float Heading = (float)((Cam.m_HeadingDegrees + 90.0f) / 180.0f * PI);
-        float x = sin(Heading);
-        float z = cos(Heading);
+        float x = (float)sin(Heading);
+        float z = (float)cos(Heading);
 
         Cam.m_Position.x += x*camSpeed;
         Cam.m_Position.z += z*camSpeed;

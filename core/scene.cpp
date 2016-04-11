@@ -14,6 +14,11 @@ void Scene::__release()
     mesh.clear();
     material.clear();
 
+    if (bvh)
+    {
+        delete bvh;
+    }
+
     bvh = NULL;
 }
 
@@ -59,11 +64,12 @@ bool Scene::loadFromFile(char * strFile)
     aiSetImportPropertyInteger(pStore, AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
     pScene = aiImportFileExWithProperties(strFile,
-        //aiProcessPreset_TargetRealtime_Quality |
-        //aiProcess_JoinIdenticalVertices |
-        //aiProcess_PreTransformVertices |
-        aiProcess_Triangulate |
-        //aiProcess_GenSmoothNormals |
+        aiProcessPreset_TargetRealtime_Quality |
+        aiProcess_JoinIdenticalVertices |
+        aiProcess_PreTransformVertices |
+        //aiProcess_Triangulate |
+        aiProcess_GenNormals |
+        aiProcess_GenSmoothNormals |
         aiProcess_FindDegenerates |
         aiProcess_FindInvalidData |
         //aiProcess_RemoveRedundantMaterials |

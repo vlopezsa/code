@@ -31,6 +31,9 @@
     <Filter Include="BVH">
       <UniqueIdentifier>{bcbf03c5-287d-48d6-80b9-9d99529fe5ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Light">
+      <UniqueIdentifier>{3c97ffc6-d1f6-49ec-ae0d-8a1fd0264015}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\IntersectionInfo.h">
@@ -114,6 +117,12 @@
     <ClInclude Include="include\osutil.h">
       <Filter>OS Util</Filter>
     </ClInclude>
+    <ClInclude Include="include\light.h">
+      <Filter>Light</Filter>
+    </ClInclude>
+    <ClInclude Include="include\prt.h">
+      <Filter>Light</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thirdparty.cpp">
@@ -178,6 +187,12 @@
     </ClCompile>
     <ClCompile Include="BVH\triangleobj.cpp">
       <Filter>BVH</Filter>
+    </ClCompile>
+    <ClCompile Include="light.cpp">
+      <Filter>Light</Filter>
+    </ClCompile>
+    <ClCompile Include="prt.cpp">
+      <Filter>Light</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

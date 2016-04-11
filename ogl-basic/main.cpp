@@ -224,8 +224,8 @@ void cameraSetup()
     g_Camera->m_MaxForwardVelocity = 100.0f;
     g_Camera->m_MaxPitchRate = 5.0f;
     g_Camera->m_MaxHeadingRate = 5.0f;
-    g_Camera->m_PitchDegrees = 18.4;
-    g_Camera->m_HeadingDegrees = 45.2;
+    g_Camera->m_PitchDegrees = 18.4f;
+    g_Camera->m_HeadingDegrees = 45.2f;
 
     g_Camera->m_Position.x = -7.33895f;
     g_Camera->m_Position.y = 2.70259f;

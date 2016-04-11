@@ -6,7 +6,7 @@
 #include "glVector.h"
 
 typedef struct {
-    unsigned char *data;
+    uint8_t *data;
     int  w, h;
 }tLightProbe;
 
@@ -55,7 +55,7 @@ public:
 
     void setGeometry(tModel *model);
 
-    int setLightProbe(unsigned char *data, int width, int height);
+    int setLightProbe(uint8_t *data, int width, int height);
 
     int setLightProbeFromFile(char *file);
 

@@ -14,12 +14,12 @@ void ImageLoader::Close()
     FreeImage_DeInitialise();
 }
 
-unsigned char *ImageLoader::LoadFile(char *sFileName, int *out_Width, int *out_Height)
+uint8_t *ImageLoader::LoadFile(char *sFileName, int *out_Width, int *out_Height)
 {
     FREE_IMAGE_FORMAT format = FIF_UNKNOWN;
     FIBITMAP *fiBitmap = NULL;
 
-	unsigned char *Data = NULL;
+	uint8_t *Data = NULL;
     unsigned int   bpp;
 
     format = FreeImage_GetFileType(sFileName);

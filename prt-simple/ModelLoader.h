@@ -3,7 +3,7 @@
 
 typedef struct {
 	char file[1024];
-	unsigned char *data;
+	uint8_t *data;
 
 	int  width;
 	int  height;

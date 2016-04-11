@@ -98,7 +98,7 @@ void CLightModel::deallocateMemory()
     }
 }
 
-int CLightModel::setLightProbe(unsigned char *data, int width, int height)
+int CLightModel::setLightProbe(uint8_t *data, int width, int height)
 {
     if (!data)
         return -1;
@@ -112,7 +112,7 @@ int CLightModel::setLightProbe(unsigned char *data, int width, int height)
 
 int CLightModel::setLightProbeFromFile(char *file)
 {
-    unsigned char *imgData=NULL;
+    uint8_t *imgData=NULL;
     int w, h;
 
     imgData = ImageLoader::LoadFile(file, &w, &h);
@@ -218,11 +218,11 @@ bool RayIntersectsTriangle(glVector *p, glVector *d,
     float det = 0.0f;
 
     e1 = *v1 - *v0;
-    e2 = *v2 - *v1;
+    e2 = *v2 - *v0;
 
     p1 = cross(*d, e2);
 
-    float a = dot(e1, p1);
+    float a = e1*p1;
 
     if (a > -0.00001 && a < 0.00001)
         return false;
@@ -250,6 +250,8 @@ bool RayIntersectsTriangle(glVector *p, glVector *d,
 
     return false;
 }
+
+
 bool CLightModel::Visibility(int vIdx, int mIdx, glVector *dir)
 {
     bool visible(true);

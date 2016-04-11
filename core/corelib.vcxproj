@@ -25,12 +25,14 @@
     <ClInclude Include="include\graphics.h" />
     <ClInclude Include="include\image.h" />
     <ClInclude Include="include\IntersectionInfo.h" />
+    <ClInclude Include="include\light.h" />
     <ClInclude Include="include\Log.h" />
     <ClInclude Include="include\material.h" />
     <ClInclude Include="include\mesh.h" />
     <ClInclude Include="include\montecarlo.h" />
     <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\osutil.h" />
+    <ClInclude Include="include\prt.h" />
     <ClInclude Include="include\quaternion.h" />
     <ClInclude Include="include\Ray.h" />
     <ClInclude Include="include\rectsampler.h" />
@@ -53,10 +55,12 @@
     <ClCompile Include="BVH\triangleobj.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="image.cpp" />
+    <ClCompile Include="light.cpp" />
     <ClCompile Include="material.cpp" />
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="montecarlo.cpp" />
     <ClCompile Include="osutil.cpp" />
+    <ClCompile Include="prt.cpp" />
     <ClCompile Include="quaternion.cpp" />
     <ClCompile Include="rectsampler.cpp" />
     <ClCompile Include="render.cpp" />

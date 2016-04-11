@@ -12,15 +12,20 @@
 #include "osutil.h"
 #include "scene.h"
 #include "thirdparty.h"
+#include "prt.h"
+#include "montecarlo.h"
 
 /* Window related variables */
 char *g_strAppTitle = "Pre-Computed Radiance Transfer";
-int g_winWidth  = 1024;
+int g_winWidth = 1024;
 int g_winHeight = 768;
 int g_winGlutID;
 
 /* Render related variables */
 Render g_Render;
+PRT    g_PRT;
+
+bool g_prtEnable = false;
 
 /* Scene related variables */
 Scene g_Scene;
@@ -61,13 +66,17 @@ void UpdateEyePositionFromMouse()
 
 /* GLUT callback functions */
 
-void Render()
+void RenderF()
 {
     g_Render.clear({ 0.1f, 0.1f, 0.0f });
 
+    // glLoadIdentity();
+
     UpdateEyePositionFromMouse();
 
-    g_Render.updateCamera(g_Camera);    
+    g_Render.updateCamera(g_Camera);
+
+    g_Render.usePreComputedEnvLight(g_prtEnable);
 
     g_Render.renderScene(&g_Scene);
 
@@ -90,7 +99,7 @@ void ChangeSize(GLsizei w, GLsizei h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(40.0, (GLdouble)w / (GLdouble)h, 0.6, 20000.0);
+    gluPerspective(45.0, (GLdouble)w / (GLdouble)h, 0.6, 20000.0);
     glMatrixMode(GL_MODELVIEW);
 
     TwWindowSize(w, h);
@@ -103,49 +112,72 @@ void KeyEvent(uint8_t key, int x, int y)
 
     switch (key)
     {
-        case 'o': case 'O':
+    case 'o': case 'O':
+    {
+        char fileName[1024] = { 0 };
+        if (osOpenDlg(fileName, 1024))
         {
-            char fileName[1024] = { 0 };
-            if (osOpenDlg(fileName, 1024))
-            {
-                try {
-                    g_Scene.loadFromFile(fileName);
-                }
-                catch (std::exception &e)
-                {
-                    std::cout << e.what() << std::endl;
-                }
+            try {
+                g_Scene.loadFromFile(fileName);
+                std::cout << "[INFO] Model loaded" << std::endl;
+                osDisplaySceneInfo(&g_Scene);
+                g_Scene.buildBVH();
+                std::cout << "[INFO] BVH loaded" << std::endl;
+                g_PRT.preComputeGeomCoeff(&g_Scene);
+                g_Render.usePreComputedEnvLight(true);
+                std::cout << "[INFO] Transport coefficients computed" << std::endl;
             }
-                
+            catch (std::exception &e)
+            {
+                std::cout << e.what() << std::endl;
+            }
         }
-        break;
-        case 'w': case 'W':
-            g_Camera->ChangeVelocity(camSpeed);
-            break;
-        case 's': case 'S':
-            g_Camera->ChangeVelocity(camSpeed*-1.0f);
-            break;
-        case 'a': case 'A':
-        {
-            float Heading = (float)((g_Camera->m_HeadingDegrees - 90.0f) / 180.0f * M_PI);
-            float x = sin(Heading);
-            float z = cos(Heading);
 
-            g_Camera->m_Position.x += x*camSpeed;
-            g_Camera->m_Position.z += z*camSpeed;
-        }
+    }
+    break;
+    case 'w': case 'W':
+        g_Camera->ChangeVelocity(camSpeed);
         break;
-
-        case 'd': case 'D':
-        {
-            float Heading = (float)((g_Camera->m_HeadingDegrees + 90.0f) / 180.0f * M_PI);
-            float x = sin(Heading);
-            float z = cos(Heading);
-
-            g_Camera->m_Position.x += x*camSpeed;
-            g_Camera->m_Position.z += z*camSpeed;
-        }
+    case 's': case 'S':
+        g_Camera->ChangeVelocity(camSpeed*-1.0f);
         break;
+    case 'a': case 'A':
+    {
+        float Heading = (float)((g_Camera->m_HeadingDegrees - 90.0f) / 180.0f * M_PI);
+        float x = sin(Heading);
+        float z = cos(Heading);
+
+        g_Camera->m_Position.x += x*camSpeed;
+        g_Camera->m_Position.z += z*camSpeed;
+    }
+    break;
+
+    case 'd': case 'D':
+    {
+        float Heading = (float)((g_Camera->m_HeadingDegrees + 90.0f) / 180.0f * M_PI);
+        float x = sin(Heading);
+        float z = cos(Heading);
+
+        g_Camera->m_Position.x += x*camSpeed;
+        g_Camera->m_Position.z += z*camSpeed;
+    }
+    break;
+
+    case 'r': case 'R':
+    {
+        g_Camera->m_Position.x += g_Camera->m_Up.x * camSpeed;
+        g_Camera->m_Position.y += g_Camera->m_Up.y * camSpeed;
+        g_Camera->m_Position.z += g_Camera->m_Up.z * camSpeed;
+    }
+    break;
+
+    case 'f': case 'F':
+    {
+        g_Camera->m_Position.x -= g_Camera->m_Up.x * camSpeed;
+        g_Camera->m_Position.y -= g_Camera->m_Up.y * camSpeed;
+        g_Camera->m_Position.z -= g_Camera->m_Up.z * camSpeed;
+    }
+    break;
     }
 }
 
@@ -191,7 +223,7 @@ void glutSetup()
     g_winGlutID = glutCreateWindow(g_strAppTitle);
 
     glutReshapeFunc(ChangeSize);
-    glutDisplayFunc(Render);
+    glutDisplayFunc(RenderF);
     glutKeyboardFunc(KeyEvent);
     glutMouseFunc(MouseFunc);
     glutMotionFunc(MotionFunc);
@@ -204,26 +236,37 @@ void cameraSetup()
     g_Camera->m_MaxForwardVelocity = 100.0f;
     g_Camera->m_MaxPitchRate = 5.0f;
     g_Camera->m_MaxHeadingRate = 5.0f;
-    g_Camera->m_PitchDegrees = -2.600001f;
-    g_Camera->m_HeadingDegrees = 49.199955f;
+    g_Camera->m_PitchDegrees = 28.8;
+    g_Camera->m_HeadingDegrees = -39.6;
 
-    g_Camera->m_Position.x = 0.0f;
-    g_Camera->m_Position.y = 0.0f;
-    g_Camera->m_Position.z = 0.0f;
+    g_Camera->m_Position.x = 9.09463f;
+    g_Camera->m_Position.y = 9.62256f;
+    g_Camera->m_Position.z = -10.9857f;
 }
 
 void toolBoxSetup()
 {
     TwBar *bar = TwNewBar("Info & Options");
     TwDefine(" GLOBAL help='PRT Simple Example' ");
-    TwDefine(" 'Info & Options' size='200 200' color='96 216 224' ");
+    TwDefine(" 'Info & Options' size='200 250' color='96 216 224' ");
 
     TwAddSeparator(bar, "cam separator", "group='Camera'");
 
-    TwAddVarRW(bar, "CamSpeed", TW_TYPE_FLOAT, &camSpeed, "group='Camera'");
-    TwAddVarRW(bar, "CamPosX", TW_TYPE_FLOAT, &g_Camera->m_Position.x, "group='Camera'");
-    TwAddVarRW(bar, "CamPosY", TW_TYPE_FLOAT, &g_Camera->m_Position.y, "group='Camera'");
-    TwAddVarRW(bar, "CamPosZ", TW_TYPE_FLOAT, &g_Camera->m_Position.z, "group='Camera'");
+    TwAddVarRW(bar, "Speed", TW_TYPE_FLOAT, &camSpeed, "group='Camera'");
+    TwAddVarRW(bar, "PosX", TW_TYPE_FLOAT, &g_Camera->m_Position.x, "group='Camera'");
+    TwAddVarRW(bar, "PosY", TW_TYPE_FLOAT, &g_Camera->m_Position.y, "group='Camera'");
+    TwAddVarRW(bar, "PosZ", TW_TYPE_FLOAT, &g_Camera->m_Position.z, "group='Camera'");
+    TwAddVarRW(bar, "Pitch", TW_TYPE_FLOAT, &g_Camera->m_PitchDegrees, "group='Camera'");
+    TwAddVarRW(bar, "Heading", TW_TYPE_FLOAT, &g_Camera->m_HeadingDegrees, "group='Camera'");
+
+    TwAddSeparator(bar, "prt separator", "group='PRT'");
+    TwAddVarRW(bar, "Enable", TW_TYPE_BOOL8, &g_prtEnable, "group='PRT'");
+}
+
+void sceneSetup()
+{
+    g_PRT.setSampler(new MonteCarlo(64 * 64));
+    g_PRT.preComputeLight();
 }
 
 void CleanUp()
@@ -242,8 +285,10 @@ int main(int argc, char **argv)
 
     toolBoxSetup();
 
+    sceneSetup();
+
     // Run GLUT loop and hence the application
-    glutMainLoop();   
+    glutMainLoop();
 
     return 0;
 }
