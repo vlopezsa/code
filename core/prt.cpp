@@ -115,13 +115,13 @@ int PRT::preComputeLight()
     for (uint32_t i = 0; i < sampler->numSamples; i++)
     {
         /* for testing purposing, using directional light */
-        /*if (sampler->Samples[i].Spherical.theta <  0.5f &&
+        if (sampler->Samples[i].Spherical.theta <  0.5f &&
             sampler->Samples[i].Spherical.theta > -0.5f
-            )*/
-        if(
+            )
+       /* if(
             sampler->Samples[i].Cartesian.y > 0.0f &&
             sampler->Samples[i].Cartesian.x > -0.2f
-          )
+          )*/
             intensity = 1.0f;
         else
             intensity = 0.0f;
@@ -150,10 +150,14 @@ void PRT::preComputeVertexCoeff(Vertex & v, uint32_t &iMesh, uint32_t &iTrian)
 
     bool occluded = false;
 
+    Vector3 posOffset = v.position + (v.normal*0.02f);
+
     /* project vertice in all bands per sample */
     for (uint32_t i = 0; i < sampler->numSamples; i++)
     {
-        Ray ray(v.position, sampler->Samples[i].Cartesian);
+        Ray ray(posOffset,
+            sampler->Samples[i].Cartesian
+            );
 
          /* this will generate shadows */
         occluded = scene->bvh->getIntersection(ray, &intInf, true);
