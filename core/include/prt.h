@@ -8,7 +8,7 @@
 #include "shstandard.h"
 #include "sampler.h"
 #include "scene.h"
-
+#include "environmentmap.h"
 
 class PRT: public Light
 {
@@ -20,7 +20,7 @@ private:
 
     uint32_t    nBands;
 
-    std::vector<float> lightCoeff;
+    std::vector<Vector3> lightCoeff;
 
     struct
     {
@@ -49,9 +49,11 @@ public:
 
     void setSampler(Sampler *sampler);
 
-    float getIntensityAt(Vertex &v, bool clamp = false);
+    Vector3 getIntensityAt(Vertex &v, bool clamp = false);
 
     int preComputeLight();
+
+    int preComputeLight(EnvironmentMap *e);
 
     /*
         useBackup - true  try to locate precomputede values for

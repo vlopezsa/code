@@ -25,8 +25,9 @@ public:
     void updateCamera(Camera *cam);
 
     void setupMaterial(Material *mat);
-    void renderMesh(Mesh *m);
+    void renderMesh(Mesh *m, uint32_t prim_type=0);
     void renderScene(Scene *s);
+    void renderEnvMap(EnvironmentMap *e);
 
     void usePreComputedEnvLight(bool enable = false);
 };

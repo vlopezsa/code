@@ -13,8 +13,8 @@
 #define M_PI_2     1.57079632679489661923
 #endif
 
-#define S_RINGS		64
-#define S_SECTORS	64
+#define S_RINGS		32
+#define S_SECTORS	32
 
 using namespace std;
 
@@ -56,48 +56,51 @@ int factorial(int x)
 	return res;
 }
 
-float K(int l, int m)
-{
-	double temp = ((2.0*l + 1.0)*factorial(l - m)) / (4.0*M_PI*factorial(l + m));
-	return (float)sqrt(temp);
+double K(uint32_t l, int m) {
+    double uVal = 1;// must be double
+
+    for (uint32_t k = l + m; k > (l - m); k--)
+        uVal *= k;
+
+    return sqrt((2.0 * l + 1.0) / (4 * M_PI * uVal));
 }
 
-float P(int l, int m, float x)
+double P(int l, int m, float x)
 {
-	float pmm = 1.0;
+    float pmm = 1.0;
 
-	if (m>0) {
-		float somx2 = (float)sqrt((1.0 - x)*(1.0 + x));
-		float fact = 1.0;
-		for (int i = 1; i <= m; i++) {
-			pmm *= (-fact) * somx2;
-			fact += 2.0;
-		}
-	}
-	if (l == m) return pmm;
-	float pmmp1 = x * (2.0f*m + 1.0f) * pmm;
-	if (l == m + 1) return pmmp1;
-	float pll = 0.0;
-	for (int ll = m + 2; ll <= l; ++ll) {
-		pll = (float)((2.0*ll - 1.0)*x*pmmp1 - (ll + m - 1.0)*pmm) / (ll - m);
-		pmm = pmmp1;
-		pmmp1 = pll;
-	}
-	return pll;
+    if (m>0) {
+        float somx2 = (float)sqrt((1.0 - x)*(1.0 + x));
+        float fact = 1.0;
+        for (int i = 1; i <= m; i++) {
+            pmm *= (-fact) * somx2;
+            fact += 2.0;
+        }
+    }
+    if (l == m) return pmm;
+    float pmmp1 = x * (2.0f*m + 1.0f) * pmm;
+    if (l == m + 1) return pmmp1;
+    float pll = 0.0;
+    for (int ll = m + 2; ll <= l; ++ll) {
+        pll = (float)((2.0*ll - 1.0)*x*pmmp1 - (ll + m - 1.0)*pmm) / (ll - m);
+        pmm = pmmp1;
+        pmmp1 = pll;
+    }
+    return pll;
 }
 
-float SH(int l, int m, float theta, float phi)
+double __inline SH(int l, int m, float theta, float phi)
 {
-	float res=0.0f;
+    double res = 0.0f;
 
-	if (m == 0)
-		res = K(l, 0) * P(l, 0, cos(theta));
-	else if (m < 0)
-		res = sqrt_2*K(l, m)*sin(-m*phi)*P(l, -m, cos(theta));
-	else
-		res = sqrt_2*K(l, m)*cos( m*phi)*P(l,  m, cos(theta));
+    if (m == 0)
+        res = K(l, 0) * P(l, 0, cos(theta));
+    else if (m < 0)
+        res = sqrt_2*K(l, -m)*sin(-m*phi)*P(l, -m, cos(theta));
+    else
+        res = sqrt_2*K(l, m)*cos(m*phi)*P(l, m, cos(theta));
 
-	return res;
+    return res;
 }
 
 void UpdateWindowTitle()
@@ -139,7 +142,7 @@ void CreateSphere(unsigned int rings, unsigned int sectors)
 			float x = (float)(cos(phi) * sin(theta));
 			float z = (float)(sin(phi) * sin(theta));
 
-			float const sh = SH(g_iOrder, g_iDegree, theta, phi);
+			float const sh = (float)SH(g_iOrder, g_iDegree, theta, phi);
 
 			*t++ = s*S;
 			*t++ = r*R;
@@ -148,13 +151,15 @@ void CreateSphere(unsigned int rings, unsigned int sectors)
 			y *= fabs(sh);
 			z *= fabs(sh);
 			
+            float len = (float)sqrt(x*x + y*y + z*z);
+
 			*v++ = x;
 			*v++ = y;
 			*v++ = z;
 
-			*n++ = x;
-			*n++ = y;
-			*n++ = z;
+			*n++ = x/len;
+			*n++ = y/len;
+			*n++ = z/len;
 
 			*c++ = (sh<0.0f) ? 1.0f : 0.0f;
 			*c++ = (sh<0.0f) ? 0.0f : 1.0f;
@@ -182,40 +187,229 @@ void UpdateRotation()
 	g_fRot[0] += (dy / (float)g_iHeight) * 10.0f;
 }
 
+void RenderSphere(float px, float py, float pz, float rx, float ry, float rz, float scale)
+{
+    glLoadIdentity();
+
+    glTranslatef(px, py, pz);
+    glRotatef(rx, 1.0f, 0.0f, 0.0f);
+    glRotatef(ry, 0.0f, 1.0f, 0.0f);
+    glRotatef(rz, 0.0f, 0.0f, 1.0f);
+    glScalef(scale, scale, scale);
+
+    glPushMatrix();
+    //glEnable(GL_CULL_FACE);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+
+    glVertexPointer(3, GL_FLOAT, 0, &g_vVertices[0]);
+    glNormalPointer(GL_FLOAT, 0, &g_vNormals[0]);
+    glColorPointer(3, GL_FLOAT, 0, &g_vColors[0]);
+
+    glDrawElements(GL_QUADS, (GLsizei)g_vIndices.size(), GL_UNSIGNED_SHORT, &g_vIndices[0]);
+    glPopMatrix();
+}
+
+#include "montecarlo.h"
+
+MonteCarlo mc(64 * 64);
+
 void RenderFunc()
 {
-	glClearColor(0.3f, 0.3f, 0.7f, 0.0f);
+    glClearColor(0.99f, 0.99f, 0.99f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 0);
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHTING);
+
+    glPointSize(3.0f);
+
+    if (g_bMouseDown)
+    {
+        UpdateRotation();
+    }
+
+    glLoadIdentity();
+
+    //glTranslatef(g_fPos[0]-0.5f, g_fPos[1]-0.5, g_fPos[2]);
+    glTranslatef(g_fPos[0], g_fPos[1], g_fPos[2]);
+    glRotatef(g_fRot[0], 1.0f, 0.0f, 0.0f);
+    glRotatef(g_fRot[1], 0.0f, 1.0f, 0.0f);
+    glRotatef(g_fRot[2], 0.0f, 0.0f, 1.0f);
+
+    glBegin(GL_POINTS);
+    for (uint32_t i = 0; i < mc.numSamples; i+=3)
+    {
+        glColor3f(0, 0, 0);
+        glVertex3f(
+            mc.Samples[i].Cartesian.x,
+            mc.Samples[i].Cartesian.y, 
+            mc.Samples[i].Cartesian.z);
+        /*glVertex3f(
+            mc.Samples[i].Square.x,
+            mc.Samples[i].Square.y,
+            0.0f);*/
+    }
+    glEnd();
+
+    glutSwapBuffers();
+}
+
+void RenderFunc2()
+{
+	glClearColor(0.99f, 0.99f, 0.99f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 0);
 	glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHTING);
 
 	if (g_bMouseDown)
 	{
 		UpdateRotation();
 	}
 
-	glLoadIdentity();
+    float pz = -13.5f;
 
-	glTranslatef(g_fPos[0], g_fPos[1], g_fPos[2]);
-	glRotatef(g_fRot[0], 1.0f, 0.0f, 0.0f);
-	glRotatef(g_fRot[1], 0.0f, 1.0f, 0.0f);
-	glRotatef(g_fRot[2], 0.0f, 0.0f, 1.0f);
+    // Order 0
+    g_iOrder = 0; g_iDegree = 0;
+    CreateSphere(64, 64);
+    RenderSphere(0.0f, 4.0f, pz,
+                 0.0f, 0.0f, 0.0f,
+                 1.0f);
 
-	glPushMatrix();
-	glEnable(GL_CULL_FACE);
+    // Order 1
+    g_iOrder = 1; g_iDegree = -1;
+    CreateSphere(64, 64);
+    RenderSphere(-2.0f, 2.0f, pz,
+        0.0f, -15.0f, 0.0f,
+        1.0f);
+    g_iOrder = 1; g_iDegree = 0;
+    CreateSphere(64, 64);
+    RenderSphere(0.0f, 2.0f, pz,
+        0.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 1; g_iDegree = 1;
+    CreateSphere(64, 64);
+    RenderSphere(2.0f, 2.0f, pz,
+        0.0f, 0.0f, 0.0f,
+        1.0f);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+    // Order 2
+    g_iOrder = 2; g_iDegree = -2;
+    CreateSphere(64, 64);
+    RenderSphere(-4.0f, 0.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 2; g_iDegree = -1;
+    CreateSphere(64, 64);
+    RenderSphere(-2.0f, 0.0f, pz,
+        0.0f, -45.0f, 0.0f,
+        1.0f);
+    g_iOrder = 2; g_iDegree = 0;
+    CreateSphere(64, 64);
+    RenderSphere(0.0f, 0.0f, pz,
+        0.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 2; g_iDegree = 1;
+    CreateSphere(64, 64);
+    RenderSphere(2.0f, 0.0f, pz,
+        0.0f, -45.0f, 0.0f,
+        1.0f);
+    g_iOrder = 2; g_iDegree = 2;
+    CreateSphere(64, 64);
+    RenderSphere(4.0f, 0.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
 
-	glVertexPointer(3, GL_FLOAT, 0, &g_vVertices[0]);
-	glNormalPointer(GL_FLOAT, 0, &g_vNormals[0]);
-	glColorPointer(3, GL_FLOAT, 0, &g_vColors[0]);
+    // Order 3
+    g_iOrder = 3; g_iDegree = -3;
+    CreateSphere(64, 64);
+    RenderSphere(-6.0f, -2.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 3; g_iDegree = -2;
+    CreateSphere(64, 64);
+    RenderSphere(-4.0f, -2.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 3; g_iDegree = -1;
+    CreateSphere(64, 64);
+    RenderSphere(-2.0f, -2.0f, pz,
+        0.0f, -45.0f, 0.0f,
+        1.0f);
+    g_iOrder = 3; g_iDegree = 0;
+    CreateSphere(64, 64);
+    RenderSphere(0.0f, -2.0f, pz,
+        0.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 3; g_iDegree = 1;
+    CreateSphere(64, 64);
+    RenderSphere(2.0f, -2.0f, pz,
+        0.0f, -45.0f, 0.0f,
+        1.0f);
+    g_iOrder = 3; g_iDegree = 2;
+    CreateSphere(64, 64);
+    RenderSphere(4.0f, -2.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 3; g_iDegree = 3;
+    CreateSphere(64, 64);
+    RenderSphere(6.0f, -2.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
 
-	glDrawElements(GL_QUADS, (GLsizei)g_vIndices.size(), GL_UNSIGNED_SHORT, &g_vIndices[0]);
-	glPopMatrix();
+    // Order 4
+    g_iOrder = 4; g_iDegree = -4;
+    CreateSphere(128, 128);
+    RenderSphere(-8.0f, -4.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 4; g_iDegree = -3;
+    CreateSphere(128, 128);
+    RenderSphere(-6.0f, -4.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 4; g_iDegree = -2;
+    CreateSphere(128, 128);
+    RenderSphere(-4.0f, -4.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 4; g_iDegree = -1;
+    CreateSphere(128, 128);
+    RenderSphere(-2.0f, -4.0f, pz,
+        0.0f, -45.0f, 0.0f,
+        1.0f);
+    g_iOrder = 4; g_iDegree = 0;
+    CreateSphere(128, 128);
+    RenderSphere(0.0f, -4.0f, pz,
+        0.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 4; g_iDegree = 1;
+    CreateSphere(128, 128);
+    RenderSphere(2.0f, -4.0f, pz,
+        0.0f, -45.0f, 0.0f,
+        1.0f);
+    g_iOrder = 4; g_iDegree = 2;
+    CreateSphere(128, 128);
+    RenderSphere(4.0f, -4.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 4; g_iDegree = 3;
+    CreateSphere(128, 128);
+    RenderSphere(6.0f, -4.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
+    g_iOrder = 4; g_iDegree = 4;
+    CreateSphere(128, 128);
+    RenderSphere(8.0f, -4.0f, pz,
+        45.0f, 0.0f, 0.0f,
+        1.0f);
 
 	glutSwapBuffers();
 }

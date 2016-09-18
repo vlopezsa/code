@@ -10,7 +10,7 @@ Mesh::~Mesh()
 {
 }
 
-void Mesh::setNumVertices(int numVertex)
+void Mesh::setNumVertices(uint32_t numVertex)
 {
     try {
         this->vertex.resize(numVertex);
@@ -22,7 +22,7 @@ void Mesh::setNumVertices(int numVertex)
     }
 }
 
-void Mesh::setNumTriangles(int numTriangle)
+void Mesh::setNumTriangles(uint32_t numTriangle)
 {
     try
     {
@@ -35,13 +35,14 @@ void Mesh::setNumTriangles(int numTriangle)
     }
 }
 
-void Mesh::addVertex(int pos, Vertex & v)
+void Mesh::addVertex(uint32_t pos, Vertex & v)
 {
     try
     {
         vertex[pos].diffuse  = v.diffuse;
         vertex[pos].normal   = v.normal;
         vertex[pos].position = v.position;
+        vertex[pos].tex      = v.tex;
 
         //vertex[pos].sh_coeff = v.sh_coeff;
     }
@@ -51,7 +52,7 @@ void Mesh::addVertex(int pos, Vertex & v)
     }
 }
 
-void Mesh::addTriangle(int pos, Triangle & t)
+void Mesh::addTriangle(uint32_t pos, Triangle & t)
 {
     try
     {

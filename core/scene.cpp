@@ -14,6 +14,12 @@ void Scene::__release()
     mesh.clear();
     material.clear();
 
+    if (envMap)
+    {
+        delete envMap;
+    }
+    envMap = NULL;
+
     if (bvh)
     {
         delete bvh;
@@ -33,11 +39,13 @@ void Scene::__calculteTriangleTotal()
 Scene::Scene()
 {
     triTotal = 0;
+    envMap = NULL;
 }
 
 Scene::Scene(char * strFile)
 {
     triTotal = 0;
+    envMap = NULL;
 
     try {
         loadFromFile(strFile);
@@ -85,24 +93,23 @@ bool Scene::loadFromFile(char * strFile)
         return false;
     }
 
-    __release();
-
+    //__release();
     strName = std::string(strFile);
 
     /* Loading meshes*/
 
     mesh.resize(pScene->mNumMeshes);
     
-    for (uint32_t i=0; i < mesh.size(); i++)
-    {
-        mesh[i].importAIMesh(pScene->mMeshes[i]);
-    }
-
     /* Loading materials */
     material.resize(pScene->mNumMaterials);
     for (uint32_t i = 0; i < pScene->mNumMaterials; i++)
     {
         material[i].importAIMaterial(&texture, pScene->mMaterials[i]);
+    }
+
+    for (uint32_t i=0; i < mesh.size(); i++)
+    {
+        mesh[i].importAIMesh(pScene->mMeshes[i]);
     }
 
     aiReleaseImport(pScene);

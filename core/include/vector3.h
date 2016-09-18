@@ -4,8 +4,9 @@ class Vector3
 {
 public:
     Vector3();
+    Vector3(float a);
     Vector3(float a, float b, float c);
-    Vector3(Vector3 &v);
+    Vector3(const Vector3 &v);
     virtual ~Vector3();
 
     float length();

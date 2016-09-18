@@ -14,6 +14,7 @@
 #include "thirdparty.h"
 #include "prt.h"
 #include "montecarlo.h"
+#include "environmentprobe.h"
 
 /* Window related variables */
 char *g_strAppTitle = "Pre-Computed Radiance Transfer";
@@ -99,11 +100,13 @@ void ChangeSize(GLsizei w, GLsizei h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(45.0, (GLdouble)w / (GLdouble)h, 0.6, 20000.0);
+    gluPerspective(45.0, (GLdouble)w / (GLdouble)h, 0.1, 20000.0);
     glMatrixMode(GL_MODELVIEW);
 
     TwWindowSize(w, h);
 }
+
+bool g_lightMap = true;
 
 void KeyEvent(uint8_t key, int x, int y)
 {
@@ -112,6 +115,21 @@ void KeyEvent(uint8_t key, int x, int y)
 
     switch (key)
     {
+    case 'p': case 'P':
+        g_prtEnable = !g_prtEnable;
+        break;
+
+    case 'l': case 'L':
+        g_lightMap = !g_lightMap;
+        if (g_lightMap)
+            g_PRT.preComputeLight(g_Scene.envMap);
+        else
+            g_PRT.preComputeLight();
+
+        g_PRT.preComputeGeomCoeff(&g_Scene);
+
+        break;
+
     case 'o': case 'O':
     {
         char fileName[1024] = { 0 };
@@ -263,10 +281,23 @@ void toolBoxSetup()
     TwAddVarRW(bar, "Enable", TW_TYPE_BOOL8, &g_prtEnable, "group='PRT'");
 }
 
+void envMapSetup()
+{
+    EnvironmentProbe *ep = new EnvironmentProbe();
+
+    ep->setLightProbe(&g_Scene.texture, "D:\\Serious\\Doctorado\\code\\probes\\forest.png");
+
+    g_Scene.envMap = ep;
+
+    g_PRT.preComputeLight(ep);
+}
+
 void sceneSetup()
 {
     g_PRT.setSampler(new MonteCarlo(64 * 64));
     g_PRT.preComputeLight();
+
+    envMapSetup();
 }
 
 void CleanUp()

@@ -18,6 +18,14 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="rt-main.cs">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9F09B5FD-6B20-4FC4-BF8A-45B21CE3842C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -144,17 +152,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy *.cs $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="BalancedTree.h" />
-    <ClInclude Include="bitmap.h" />
-    <ClInclude Include="model_obj.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="bitmap.cpp" />
-    <ClCompile Include="model_obj.cpp" />
-    <ClCompile Include="Raytracer.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

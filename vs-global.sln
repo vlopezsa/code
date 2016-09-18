@@ -27,8 +27,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rt", "rt\rt.vcxproj", "{822
 		{E2DF94F5-FE42-42DC-875B-3B8424F85361} = {E2DF94F5-FE42-42DC-875B-3B8424F85361}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "instant-radiosity", "instant-radiosity\instant-radiosity.vcxproj", "{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ogl-rt", "ogl-rt\ogl-rt.vcxproj", "{9F09B5FD-6B20-4FC4-BF8A-45B21CE3842C}"
 EndProject
 Global
@@ -152,24 +150,6 @@ Global
 		{822732FD-2315-4EC8-8CDA-2CE69D9894DC}.Release|Win32.Build.0 = Release|Win32
 		{822732FD-2315-4EC8-8CDA-2CE69D9894DC}.Release|x64.ActiveCfg = Release|x64
 		{822732FD-2315-4EC8-8CDA-2CE69D9894DC}.Release|x64.Build.0 = Release|x64
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Debug|Win32.ActiveCfg = Debug|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Debug|Win32.Build.0 = Debug|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Debug|x64.ActiveCfg = Debug|x64
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Debug|x64.Build.0 = Debug|x64
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Profile|Mixed Platforms.ActiveCfg = Release|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Profile|Mixed Platforms.Build.0 = Release|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Profile|Win32.ActiveCfg = Release|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Profile|Win32.Build.0 = Release|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Profile|x64.ActiveCfg = Release|x64
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Profile|x64.Build.0 = Release|x64
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Release|Win32.ActiveCfg = Release|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Release|Win32.Build.0 = Release|Win32
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Release|x64.ActiveCfg = Release|x64
-		{C6752B9E-6A7D-403A-9762-72FD1C52B4E3}.Release|x64.Build.0 = Release|x64
 		{9F09B5FD-6B20-4FC4-BF8A-45B21CE3842C}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{9F09B5FD-6B20-4FC4-BF8A-45B21CE3842C}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{9F09B5FD-6B20-4FC4-BF8A-45B21CE3842C}.Debug|Win32.ActiveCfg = Debug|Win32

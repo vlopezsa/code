@@ -52,24 +52,32 @@ void PRT::setSampler(Sampler * s)
     sampler = s;
 }
 
-float PRT::getIntensityAt(Vertex & v, bool clamp)
+#define myclamp(x, min, max) {\
+    if (x > max)\
+        x = max;\
+    else if (x < min)\
+        x = min;\
+}
+
+Vector3 PRT::getIntensityAt(Vertex & v, bool clamp)
 {
-    float intensity = 0.0f;
+    Vector3 intensity;
 
     if (!sh)
         intensity;
 
     for (uint32_t i = 0; i < sh->numBaseCoeff; i++)
     {
-        intensity += lightCoeff[i] * v.sh_coeff[i];
+        intensity.x += lightCoeff[i].x * v.sh_coeff[i];
+        intensity.y += lightCoeff[i].y * v.sh_coeff[i];
+        intensity.z += lightCoeff[i].z * v.sh_coeff[i];
     }
 
     if(clamp)
     {
-        if (intensity > 1.0f)
-            intensity = 1.0f;
-        else if (intensity < 0.0f)
-            intensity = 0.0f;
+        myclamp(intensity.x, 0.0f, 1.0f);
+        myclamp(intensity.y, 0.0f, 1.0f);
+        myclamp(intensity.z, 0.0f, 1.0f);
     }
 
     return intensity;
@@ -77,7 +85,7 @@ float PRT::getIntensityAt(Vertex & v, bool clamp)
 
 void PRT::computeLightIntensityAtVertices()
 {
-    float intensity;
+    Vector3 intensity;
 
     for (uint32_t i = 0; i < scene->numMeshes(); i++)
     {
@@ -88,13 +96,13 @@ void PRT::computeLightIntensityAtVertices()
         {
             intensity = getIntensityAt(m->vertex[j]);
 
-            /*m->vertex[j].diffuse.r = intensity*mat->Color.diffuse.r;
-            m->vertex[j].diffuse.g = intensity*mat->Color.diffuse.g;
-            m->vertex[j].diffuse.b = intensity*mat->Color.diffuse.b;*/
+            m->vertex[j].diffuse.r = intensity.r*mat->Color.diffuse.r;
+            m->vertex[j].diffuse.g = intensity.g*mat->Color.diffuse.g;
+            m->vertex[j].diffuse.b = intensity.b*mat->Color.diffuse.b;
 
-            m->vertex[j].diffuse.r = intensity;
+            /*m->vertex[j].diffuse.r = intensity;
             m->vertex[j].diffuse.g = intensity;
-            m->vertex[j].diffuse.b = intensity;
+            m->vertex[j].diffuse.b = intensity;*/
         }
     }
 }
@@ -115,21 +123,27 @@ int PRT::preComputeLight()
     for (uint32_t i = 0; i < sampler->numSamples; i++)
     {
         /* for testing purposing, using directional light */
-        if (sampler->Samples[i].Spherical.theta <  0.5f &&
+       /* if (sampler->Samples[i].Spherical.theta <  0.5f &&
             sampler->Samples[i].Spherical.theta > -0.5f
-            )
+            )*/
        /* if(
             sampler->Samples[i].Cartesian.y > 0.0f &&
             sampler->Samples[i].Cartesian.x > -0.2f
           )*/
-            intensity = 1.0f;
+            /*intensity = 1.0f;
         else
-            intensity = 0.0f;
+            intensity = 0.0f;*/
+        intensity = /*fmax(0, 5 * cos(sampler->Samples[i].Spherical.theta) - 4) + */
+                    fmax(0, -4.0f * sin(sampler->Samples[i].Spherical.theta - M_PI) *
+                        cos(sampler->Samples[i].Spherical.phi-2.5f)-3.0f);
 
         /* projecting light in each band per sampling */
         for (uint32_t j = 0; j < sh->numBaseCoeff; j++)
         {
-            lightCoeff[j] += intensity * sh->Coefficient[i][j];
+
+            lightCoeff[j].x += intensity * sh->Coefficient[i][j];
+            lightCoeff[j].y += intensity * sh->Coefficient[i][j];
+            lightCoeff[j].z += intensity * sh->Coefficient[i][j];
         }
     }
 
@@ -137,6 +151,38 @@ int PRT::preComputeLight()
     sh->scaleFunctionCoeff(lightCoeff);
 
     return 0;
+}
+
+int PRT::preComputeLight(EnvironmentMap *e)
+{
+    if (!e)
+        return -1;
+
+    if (!sampler)
+        return -1;
+
+    if (!sh)
+        return -1;
+
+    lightCoeff.clear();
+    lightCoeff.resize(sh->numBaseCoeff);
+
+    Vector3 intensity;
+
+    for (uint32_t i = 0; i < sampler->numSamples; i++)
+    {
+        intensity = e->getSampleDir(sampler->Samples[i].Cartesian);
+
+        for (uint32_t j = 0; j < sh->numBaseCoeff; j++)
+        {
+            lightCoeff[j].x += intensity.x * sh->Coefficient[i][j];
+            lightCoeff[j].y += intensity.y * sh->Coefficient[i][j];
+            lightCoeff[j].z += intensity.z * sh->Coefficient[i][j];
+        }
+    }
+
+    /* normalize light coeff */
+    sh->scaleFunctionCoeff(lightCoeff);
 }
 
 void PRT::preComputeVertexCoeff(Vertex & v, uint32_t &iMesh, uint32_t &iTrian)
