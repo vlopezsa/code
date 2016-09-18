@@ -110,7 +110,7 @@ void Render::setupMaterial(Material * mat)
     mat_diffuse[0] = mat->Color.diffuse.r;
     mat_diffuse[1] = mat->Color.diffuse.g;
     mat_diffuse[2] = mat->Color.diffuse.b;
-    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mat_diffuse);
 
     if (mat->getNumTexDiffuse() > 0)
     {

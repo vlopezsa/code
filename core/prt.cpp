@@ -52,24 +52,32 @@ void PRT::setSampler(Sampler * s)
     sampler = s;
 }
 
-float PRT::getIntensityAt(Vertex & v, bool clamp)
+#define myclamp(x, min, max) {\
+    if (x > max)\
+        x = max;\
+    else if (x < min)\
+        x = min;\
+}
+
+Vector3 PRT::getIntensityAt(Vertex & v, bool clamp)
 {
-    float intensity = 0.0f;
+    Vector3 intensity;
 
     if (!sh)
         intensity;
 
     for (uint32_t i = 0; i < sh->numBaseCoeff; i++)
     {
-        intensity += lightCoeff[i] * v.sh_coeff[i];
+        intensity.x += lightCoeff[i].x * v.sh_coeff[i];
+        intensity.y += lightCoeff[i].y * v.sh_coeff[i];
+        intensity.z += lightCoeff[i].z * v.sh_coeff[i];
     }
 
-    if(clamp)
+    if (clamp)
     {
-        if (intensity > 1.0f)
-            intensity = 1.0f;
-        else if (intensity < 0.0f)
-            intensity = 0.0f;
+        myclamp(intensity.x, 0.0f, 1.0f);
+        myclamp(intensity.y, 0.0f, 1.0f);
+        myclamp(intensity.z, 0.0f, 1.0f);
     }
 
     return intensity;
@@ -77,7 +85,7 @@ float PRT::getIntensityAt(Vertex & v, bool clamp)
 
 void PRT::computeLightIntensityAtVertices()
 {
-    float intensity;
+    Vector3 intensity;
 
     for (uint32_t i = 0; i < scene->numMeshes(); i++)
     {
@@ -88,13 +96,9 @@ void PRT::computeLightIntensityAtVertices()
         {
             intensity = getIntensityAt(m->vertex[j]);
 
-            /*m->vertex[j].diffuse.r = intensity*mat->Color.diffuse.r;
-            m->vertex[j].diffuse.g = intensity*mat->Color.diffuse.g;
-            m->vertex[j].diffuse.b = intensity*mat->Color.diffuse.b;*/
-
-            m->vertex[j].diffuse.r = intensity;
-            m->vertex[j].diffuse.g = intensity;
-            m->vertex[j].diffuse.b = intensity;
+            m->vertex[j].diffuse.r = intensity.r*mat->Color.diffuse.r;
+            m->vertex[j].diffuse.g = intensity.g*mat->Color.diffuse.g;
+            m->vertex[j].diffuse.b = intensity.b*mat->Color.diffuse.b;
         }
     }
 }

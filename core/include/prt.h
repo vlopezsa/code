@@ -20,7 +20,7 @@ private:
 
     uint32_t    nBands;
 
-    std::vector<float> lightCoeff;
+    std::vector<Vector3> lightCoeff;
 
     struct
     {
@@ -49,7 +49,7 @@ public:
 
     void setSampler(Sampler *sampler);
 
-    float getIntensityAt(Vertex &v, bool clamp = false);
+    Vector3 getIntensityAt(Vertex &v, bool clamp = false);
 
     int preComputeLight();
 
