@@ -11,6 +11,8 @@
 #include "mesh.h"
 #include "triangleobj.h"
 
+using namespace std;
+
 PRT::PRT()
 {
     sh = NULL;
@@ -64,7 +66,7 @@ Vector3 PRT::getIntensityAt(Vertex & v, bool clamp)
     Vector3 intensity;
 
     if (!sh)
-        intensity;
+        return intensity;
 
     for (uint32_t i = 0; i < sh->numBaseCoeff; i++)
     {
@@ -72,6 +74,18 @@ Vector3 PRT::getIntensityAt(Vertex & v, bool clamp)
         intensity.y += lightCoeff[i].y * v.sh_coeff[i];
         intensity.z += lightCoeff[i].z * v.sh_coeff[i];
     }
+
+    /*for (uint32_t j = 0; j < sampler->numSamples; j++)
+        for (uint32_t i = 0; i < sh->numBaseCoeff; i++)
+        {
+            intensity.x += sh->Coefficient[j][i] * v.sh_coeff[i];
+            intensity.y += sh->Coefficient[j][i] * v.sh_coeff[i];
+            intensity.z += sh->Coefficient[j][i] * v.sh_coeff[i];
+        }
+
+    intensity.x /= (float)sampler->numSamples;
+    intensity.y /= (float)sampler->numSamples;
+    intensity.z /= (float)sampler->numSamples;*/
 
     if (clamp)
     {
@@ -96,9 +110,13 @@ void PRT::computeLightIntensityAtVertices()
         {
             intensity = getIntensityAt(m->vertex[j]);
 
-            m->vertex[j].diffuse.r = intensity.r*mat->Color.diffuse.r;
-            m->vertex[j].diffuse.g = intensity.g*mat->Color.diffuse.g;
-            m->vertex[j].diffuse.b = intensity.b*mat->Color.diffuse.b;
+            m->vertex[j].diffuse.r = 0.01 + intensity.r*mat->Color.diffuse.r;
+            m->vertex[j].diffuse.g = 0.01 + intensity.g*mat->Color.diffuse.g;
+            m->vertex[j].diffuse.b = 0.01 + intensity.b*mat->Color.diffuse.b;
+
+            /*m->vertex[j].diffuse.r = intensity.r;
+            m->vertex[j].diffuse.g = intensity.g;
+            m->vertex[j].diffuse.b = intensity.b;*/
         }
     }
 }
@@ -278,6 +296,60 @@ bool PRT::saveCoeffToFile()
 
     fclose(f);
 
+    return true;
+}
+
+bool PRT::saveAsCSV(char *file)
+{
+    FILE *f = NULL;
+    char fileName[1024] = { 0 };
+
+    if(file)
+        sprintf(fileName, "%s", file);
+    else
+        sprintf(fileName, "%s.csv", scene->strName.c_str());
+
+    f = fopen(fileName, "w");
+
+    if (!f)
+    {
+        cout << "Failed to create CSV file" << endl;
+        return false;
+    }
+
+    /* Write column names */
+    fprintf(f, "PosX, PosY, PosZ, NormalX, NormalY, NormalZ");
+
+    for (uint32_t i = 0; i < sh->numBaseCoeff; i++)
+    {
+        fprintf(f, ", SH_C%d", i);
+    }
+
+    fprintf(f, "\n");
+
+    /* Write the vertices */
+    for (uint32_t i = 0; i < scene->numMeshes(); i++)
+    {
+        Mesh *m = &scene->mesh[i];
+        for (uint32_t j = 0; j < m->numVertices(); j++)
+       {
+            Vertex *v = &m->vertex[j];
+
+            fprintf(f, "%f, %f, %f, %f, %f, %f",
+                v->position.x, v->position.y, v->position.z,
+                v->normal.x, v->normal.y, v->normal.z);
+
+            for (uint32_t k = 0; k < sh->numBaseCoeff; k++)
+            {
+                fprintf(f, ", %f", v->sh_coeff[k]);
+            }
+
+            fprintf(f, "\n");
+       }
+    }
+
+    fclose(f);
+        
     return true;
 }
 

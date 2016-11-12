@@ -150,6 +150,8 @@ void Render::renderScene(Scene * s)
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_NORMALIZE);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     /* activate gl state for array drawing */
     glEnableClientState(GL_VERTEX_ARRAY);

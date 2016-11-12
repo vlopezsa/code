@@ -68,4 +68,6 @@ public:
 
     */
     int preComputeGeomCoeff(Scene *, bool useBackup = true, bool updateVertices = true, bool parallel = true);
+
+    bool saveAsCSV(char *file = NULL);
 };
