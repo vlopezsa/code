@@ -1,5 +1,6 @@
 #include <math.h>
 
+#include "vector4.h"
 #include "vector3.h"
 
 Vector3::Vector3()
@@ -66,6 +67,13 @@ void Vector3::operator -=(const Vector3 &v)
     this->x -= v.x;
     this->y -= v.y;
     this->z -= v.z;
+}
+
+void Vector3::operator *=(const Vector3 &v)
+{
+    this->x *= v.x;
+    this->y *= v.y;
+    this->z *= v.z;
 }
 
 float Vector3::length()
@@ -140,6 +148,17 @@ Vector3 operator -(const Vector3 &v1, const Vector3 &v2)
     o.x = v1.x - v2.x;
     o.y = v1.y - v2.y;
     o.z = v1.z - v2.z;
+
+    return o;
+}
+
+Vector3 operator *(const Vector3 &v1, const Vector3 &v2)
+{
+    Vector3 o;
+
+    o.x = v1.x * v2.x;
+    o.y = v1.y * v2.y;
+    o.z = v1.z * v2.z;
 
     return o;
 }

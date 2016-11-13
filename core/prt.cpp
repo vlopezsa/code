@@ -64,7 +64,7 @@ Vector3 PRT::getIntensityAt(Vertex & v, bool clamp)
     Vector3 intensity;
 
     if (!sh)
-        intensity;
+        return intensity;
 
     for (uint32_t i = 0; i < sh->numBaseCoeff; i++)
     {

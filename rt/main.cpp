@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 
 #include <GL/glut.h>
 #include <AntTweakBar.h>
@@ -12,6 +13,7 @@
 #include "osutil.h"
 #include "scene.h"
 #include "thirdparty.h"
+#include "montecarlo.h"
 
 /* Window related variables */
 char *g_strAppTitle = "Ray Tracer";
@@ -34,35 +36,138 @@ int LastMouseButtonClicked;
 
 /* debug options */
 bool  g_drawRays = false;
+bool  g_drawLightNormals = false;
+bool  g_drawRT = false;
+bool  g_drawLightPos = true;
 float g_rayPercentage = 10.0;
 
 #include "triangleobj.h"
 
-typedef struct {
+typedef struct Line {
     Vector3 o;
     Vector3 e;
+    Vector3 n;
     bool hit;
+
+    Line::Line()
+    {
+
+    }
+
+    Line::Line(const Line &line)
+    {
+        o = line.o;
+        e = line.e;
+        n = line.n;
+        hit = line.hit;
+    }
 }Line;
 
 std::vector<Line> lines;
 
-void rayTrace()
+static float light_position[] = { 10.0f, 10.0f, 10.0f };
+static float light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+Sampler *mcSampler = new MonteCarlo(4 * 4);
+
+static inline float clamp(float val, float min, float max)
 {
-    if (g_Scene.bvh == NULL)
-        return;
+    if (val < min)
+        return min;
+    else if (val > max)
+        return max;
 
-    Image *img = g_SceneRT.texture.getTextureImage(0U);
-    uint8_t *out = img->getData();
+    return val;
+}
 
-    glPushMatrix();
-    g_Camera->SetPerspective();
-    glPopMatrix();
 
-    Vector3 lookAt(0, 0, 0);
-    Vector3 Up(0, 1, 0);
-    Vector3 Position(0.001, 25, 0.001);
+typedef struct pointLight
+{
+    Vector3 pos;
+    Color3 diffuse;
+} pointLight;
 
-    Vector3 camera_dir = lookAt - Position;
+Color3 getRadiance(Ray &ray, pointLight &light, uint32_t bounceCnt)
+{
+    Color3 color;
+
+    IntersectionInfo I;
+
+    bool hit = g_Scene.bvh->getIntersection(ray, &I, false);
+
+    if (hit) {
+        Vector4 lightDir = Vector4(light.pos) - I.hit;
+
+        float distLight = length(lightDir);
+
+        lightDir = normalize(lightDir);
+
+        Ray rayLight(I.hit + (lightDir*0.0001f), lightDir);
+        IntersectionInfo ILight;
+
+        bool hitLight = g_Scene.bvh->getIntersection(rayLight, &ILight, false);
+
+        TriangleObj *tr = (TriangleObj *)I.object;
+        Mesh *m = &g_Scene.mesh[tr->meshId];
+        Material *mat = &g_Scene.material[m->materialIdx];
+        Vector4 n = tr->getNormal(I);
+
+        if (!hitLight)
+        {
+            float lightCont = fmax(lightDir * n, 0.0f);
+
+            color = mat->Color.diffuse * light.diffuse * lightCont;
+        }
+
+        if (bounceCnt > 0)
+        {
+            uint32_t sampleCnt = 0;
+            Color3  idrRadiance;
+            for (uint32_t si = 0; si < mcSampler->numSamples; si++)
+            {
+                float costerm = n * mcSampler->Samples[si].Cartesian;
+
+                // only the hemisphere pointer toward the normal
+                if (costerm > 0.0f)
+                {
+                    Vector4 bPos = I.hit + (mcSampler->Samples[si].Cartesian*0.00001);
+                    Ray bRay(bPos, mcSampler->Samples[si].Cartesian);
+
+                    idrRadiance += getRadiance(bRay, light, bounceCnt - 1) * costerm;
+                }
+
+                sampleCnt++;
+            }
+
+            idrRadiance /= (float)sampleCnt;
+
+            color = idrRadiance;
+        }
+    }
+
+    return color;
+}
+
+void _partialRayTrace(uint8_t *outBuf,
+    uint32_t startX, uint32_t endX, 
+    uint32_t startY, uint32_t endY,
+    uint32_t Width, uint32_t Height,
+    uint32_t pitch)
+{
+    Vector3 Up = g_Camera->m_Up;
+    Vector3 Position = g_Camera->m_Position;
+    Vector3 camera_dir = g_Camera->m_Direction;
+
+    pointLight light;
+
+    light.pos = Vector3(light_position[0], light_position[1], light_position[2]);
+    light.diffuse = Vector3(light_diffuse[0], light_diffuse[1], light_diffuse[2]);
+
+    Position.z *= -1.0f;
+    camera_dir.z *= -1.0f;
+    Up.x *= -1.0f;
+    Up.y *= -1.0f;
+
     camera_dir.normalize();
 
     // Camera tangent space
@@ -72,18 +177,12 @@ void rayTrace()
     Vector3 camera_v = cross(camera_u, camera_dir);
     camera_v.normalize();
 
-    lines.clear();
-    lines.resize(img->Height * img->Width);
+    for (size_t j = startY; j<endY && j<Height; j++) {
+        size_t index = j * pitch;
 
-    uint32_t cnt = 0;
-
-    for (size_t j = 0; j<img->Height; j++) {
-        size_t index = j * img->Pitch;
-
-
-        for (size_t i = 0; i<img->Width; i++, index += 3) {
-            float u = ((float)i + .5f) / (float)(img->Width - 1) - .5f;
-            float v = ((float)(img->Height - 1 - j) + .5f) / (float)(img->Height - 1) - .5f;
+        for (size_t i = startX; i<endX && i<Width; i++, index += 3) {
+            float u = ((float)i + .5f) / (float)(Width - 1) - .5f;
+            float v = ((float)(Height - 1 - j) + .5f) / (float)(Height - 1) - .5f;
             float fov = 0.5f / tanf(40.f * 3.14159265*.5f / 180.f);
 
             // This is only valid for square aspect ratio images
@@ -91,30 +190,52 @@ void rayTrace()
             rayDir.normalize();
             Ray ray(Position, rayDir);
 
-            IntersectionInfo I;
+            Color3 outColor = getRadiance(ray, light, 1);
 
-            bool hit = g_Scene.bvh->getIntersection(ray, &I, false);
-
-            if (!hit) {
-                out[index + 0] = 0;
-                out[index + 1] = 26;
-                out[index + 2] = 26;
-            }
-            else {
-                out[index + 0] = (uint8_t)(I.bary.z*255.0f);
-                out[index + 1] = (uint8_t)(I.bary.y*255.0f);
-                out[index + 2] = (uint8_t)(I.bary.x*255.0f);
-            }
-
-            lines[cnt].o = Position;
-            lines[cnt].e = Position + (rayDir * 30.0f);
-            lines[cnt].hit = hit;
-
-            cnt++;
+            outBuf[index + 0] = (uint8_t)clamp((outColor.b * 255.0f), 0.0f, 255.0f);
+            outBuf[index + 1] = (uint8_t)clamp((outColor.g * 255.0f), 0.0f, 255.0f);
+            outBuf[index + 2] = (uint8_t)clamp((outColor.r * 255.0f), 0.0f, 255.0f);
         }
     }
+}
+
+void TW_CALL rayTrace(void *)
+{
+    if (g_Scene.bvh == NULL)
+        return;
+
+    Image *img = g_SceneRT.texture.getTextureImage(0U);
+    uint8_t *out = img->getData();
+
+    uint32_t numProc = std::thread::hardware_concurrency();
+    uint32_t nThread;
+
+    if (numProc <= 0)
+        nThread = 1;
+    else
+        nThread = numProc;
+
+    uint32_t split = (uint32_t)ceilf((float)img->Height / (float)nThread);
+
+    if (split <= 1)
+    {
+        nThread = 1;
+        split = img->Height;
+    }
+
+    std::vector<std::thread> threads;
+
+    uint32_t k = 0;
+    for (uint32_t j = 0, k = 0; j < nThread; k += split, j++) {
+        threads.push_back(std::thread(_partialRayTrace, out, 0, img->Width, k, k+split, img->Width, img->Height, img->Pitch));
+    }
+
+    for (uint32_t j = 0; j < nThread; j++)
+        threads[j].join();
 
     img->SaveToFile("output-rt.png");
+
+    std::cout << "RT Done!" << std::endl;
 }
 
 void UpdateEyePositionFromMouse()
@@ -163,12 +284,27 @@ void drawRays()
             glColor3f(0.0f, 1.0f, 0.0f);
         else
             glColor3f(1.0f, 0.0f, 0.0f);
-        glVertex3f(
-            lines[i].o.x, lines[i].o.y, lines[i].o.z
-            );
-        glVertex3f(
-            lines[i].e.x, lines[i].e.y, lines[i].e.z
-            );
+
+        if (g_drawRays)
+        {
+            glVertex3f(
+                lines[i].o.x, lines[i].o.y, lines[i].o.z
+                );
+            glVertex3f(
+                lines[i].e.x, lines[i].e.y, lines[i].e.z
+                );
+        }
+
+        if (g_drawLightNormals)
+        {
+            glColor3f(0.0f, 0.0f, 1.0f);
+            glVertex3f(
+                lines[i].o.x, lines[i].o.y, lines[i].o.z
+                );
+            glVertex3f(
+                lines[i].n.x, lines[i].n.y, lines[i].n.z
+                );
+        }
 
         fi += skip;
         i = (uint32_t)fi;
@@ -185,10 +321,28 @@ void RenderF()
 
     g_Render.updateCamera(g_Camera);
 
-    g_Render.renderScene(&g_Scene);
+    if (g_drawRT)
+    {
+        g_Render.renderScene(&g_SceneRT);
+    }
+     else
+    {
+        g_Render.renderScene(&g_Scene);
+        if (g_drawRays || g_drawLightNormals)
+            drawRays();
 
-    if(g_drawRays)
-        drawRays();
+        if (g_drawLightPos)
+        {
+            glDisable(GL_LIGHTING);
+
+            glPointSize(5.0f);
+            glColor3f(light_diffuse[0], light_diffuse[1], light_diffuse[2]);
+
+            glBegin(GL_POINTS);
+            glVertex3f(light_position[0], light_position[1], light_position[2]);
+            glEnd();
+        }
+    }
 
     TwDraw();
 
@@ -232,7 +386,7 @@ void KeyEvent(uint8_t key, int x, int y)
                 std::cout << "File loaded" << std::endl;
                 g_Scene.buildBVH();
                 std::cout << "BVH built" << std::endl;
-                rayTrace();
+                //rayTrace();
                 osDisplaySceneInfo(&g_Scene);
             }
             catch (std::exception &e)
@@ -328,30 +482,47 @@ void cameraSetup()
     g_Camera->m_MaxForwardVelocity = 100.0f;
     g_Camera->m_MaxPitchRate = 5.0f;
     g_Camera->m_MaxHeadingRate = 5.0f;
-    g_Camera->m_PitchDegrees = 18.4;
-    g_Camera->m_HeadingDegrees = 45.2;
+    g_Camera->m_PitchDegrees = 23.2;
+    g_Camera->m_HeadingDegrees = -37.4;
 
-    g_Camera->m_Position.x = -15.7551;
-    g_Camera->m_Position.y = 6.6482;
-    g_Camera->m_Position.z = -15.7551;
+    g_Camera->m_Position.x = 9.52788f;
+    g_Camera->m_Position.y = 9.29302f;
+    g_Camera->m_Position.z = -13.0324f;
 }
 
 void toolBoxSetup()
 {
-    TwBar *bar = TwNewBar("Info & Options");
+    TwBar *bar = TwNewBar("myBar");
     TwDefine(" GLOBAL help='PRT Simple Example' ");
-    TwDefine(" 'Info & Options' size='200 200' color='96 216 224' ");
-
-    TwAddSeparator(bar, "cam separator", "group='Camera'");
-
-    TwAddVarRW(bar, "CamSpeed", TW_TYPE_FLOAT, &camSpeed, "group='Camera'");
-    TwAddVarRW(bar, "CamPosX", TW_TYPE_FLOAT, &g_Camera->m_Position.x, "group='Camera'");
-    TwAddVarRW(bar, "CamPosY", TW_TYPE_FLOAT, &g_Camera->m_Position.y, "group='Camera'");
-    TwAddVarRW(bar, "CamPosZ", TW_TYPE_FLOAT, &g_Camera->m_Position.z, "group='Camera'");
+    TwDefine(" myBar size='200 200' color='96 216 224' ");
+    TwDefine(" myBar label='Info & Options'");
 
     TwAddSeparator(bar, "ray separator", "group='Rays'");
-    TwAddVarRW(bar, "Draw Rays", TW_TYPE_BOOL8, &g_drawRays, "group='Rays'");
-    TwAddVarRW(bar, "Rays Percentage", TW_TYPE_FLOAT, &g_rayPercentage, "group='Rays'");
+    //TwAddVarRW(bar, "Render", TW_TYPE_BOOL8, &g_drawRT, "group='Rays' true='Ray Tracing' false='OpenGL'");
+    TwAddVarRW(bar, "Light Rays", TW_TYPE_BOOL8, &g_drawRays, "group='Rays'");
+    TwAddVarRW(bar, "Light Normals", TW_TYPE_BOOL8, &g_drawLightNormals, "group='Rays'");
+    TwAddVarRW(bar, "Rays Percentage", TW_TYPE_FLOAT, &g_rayPercentage, "group='Rays' min=0.0 max=100.0");
+    TwAddButton(bar, "RayTrace", rayTrace, NULL, "group='Rays'");
+
+    TwAddSeparator(bar, "light separator", "group='Light'");
+    TwAddVarRW(bar, "Draw Position", TW_TYPE_BOOL8, &g_drawLightPos, "group='Light'");
+    TwAddVarRW(bar, "Light.X", TW_TYPE_FLOAT, &light_position[0], "group='Light'");
+    TwAddVarRW(bar, "Light.Y", TW_TYPE_FLOAT, &light_position[1], "group='Light'");
+    TwAddVarRW(bar, "Light.Z", TW_TYPE_FLOAT, &light_position[2], "group='Light'");
+
+    TwAddVarRW(bar, "Light.Red", TW_TYPE_FLOAT, &light_diffuse[0], "group='Light'");
+    TwAddVarRW(bar, "Light.Green", TW_TYPE_FLOAT, &light_diffuse[1], "group='Light'");
+    TwAddVarRW(bar, "Light.Blue", TW_TYPE_FLOAT, &light_diffuse[2], "group='Light'");
+
+    TwAddSeparator(bar, "cam separator", "group='Camera'");
+    TwAddVarRW(bar, "Speed", TW_TYPE_FLOAT, &camSpeed, "group='Camera'");
+    TwAddVarRW(bar, "PosX", TW_TYPE_FLOAT, &g_Camera->m_Position.x, "group='Camera'");
+    TwAddVarRW(bar, "PosY", TW_TYPE_FLOAT, &g_Camera->m_Position.y, "group='Camera'");
+    TwAddVarRW(bar, "PosZ", TW_TYPE_FLOAT, &g_Camera->m_Position.z, "group='Camera'");
+    TwAddVarRW(bar, "Heading", TW_TYPE_FLOAT, &g_Camera->m_HeadingDegrees, "group='Camera'");
+    TwAddVarRW(bar, "Pitch", TW_TYPE_FLOAT, &g_Camera->m_PitchDegrees, "group='Camera'");
+
+    TwDefine("myBar/Camera opened=false");
 }
 
 void CleanUp()
@@ -437,6 +608,8 @@ int main(int argc, char **argv)
     toolBoxSetup();
 
     initRTScene();
+
+//    rayTrace();
 
     // Run GLUT loop and hence the application
     glutMainLoop();

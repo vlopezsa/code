@@ -111,7 +111,7 @@ bool TriangleObj::getIntersection(const Ray & ray, IntersectionInfo * intersecti
 
         intersection->bary.x = i1.x;
         intersection->bary.y = i1.y;
-        intersection->bary.x = 1.0f - i1.x - i1.y;
+        intersection->bary.z = 1.0f - i1.x - i1.y;
         return true;
     }
 
@@ -120,7 +120,20 @@ bool TriangleObj::getIntersection(const Ray & ray, IntersectionInfo * intersecti
 
 Vector4 TriangleObj::getNormal(const IntersectionInfo& I) const
 {
-    return normalize(I.hit-centroid);
+    uint32_t iv1, iv2, iv3;
+
+    iv1 = mesh->triangle[triId].v1;
+    iv2 = mesh->triangle[triId].v2;
+    iv3 = mesh->triangle[triId].v3;
+
+    const Vector4 &v0 = mesh->vertex[iv1].normal;
+    const Vector4 &v1 = mesh->vertex[iv2].normal;
+    const Vector4 &v2 = mesh->vertex[iv3].normal;
+
+
+    Vector4 vSum = (v0*I.bary.z) + (v1*I.bary.x) + (v2*I.bary.y);
+
+    return normalize(vSum);
 }
 
 BBox TriangleObj::getBBox() const

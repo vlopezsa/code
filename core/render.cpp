@@ -77,10 +77,10 @@ void Render::usePreComputedEnvLight(bool enable)
         glDisableClientState(GL_COLOR_ARRAY);
 }
 
-float light_position[] = { 10.0f, 10.0f, 10.0f };
-float light_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+static float light_position[] = { 10.0f, 10.0f, 10.0f };
+static float light_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-float mat_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+static float mat_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 void Render::renderMesh(Mesh * m)
 {
