@@ -34,8 +34,8 @@ void MonteCarlo::calculateSamples()
             uCartesian.y = sin(uSphere.theta) * sin(uSphere.phi);
             uCartesian.z = cos(uSphere.theta);
 
-            _Samples[sCnt].Square.x = j;
-            _Samples[sCnt].Square.y = i;
+            _Samples[sCnt].Square.x = cell.x;
+            _Samples[sCnt].Square.y = cell.y;
 
             _Samples[sCnt].Spherical.theta = uSphere.theta;
             _Samples[sCnt].Spherical.phi = uSphere.phi;

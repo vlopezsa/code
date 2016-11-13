@@ -13,6 +13,13 @@ Vector3::~Vector3()
 
 }
 
+Vector3::Vector3(float a)
+{
+    x = a;
+    y = a;
+    z = a;
+}
+
 Vector3::Vector3(float a, float b, float c)
 {
     x = a;
@@ -20,7 +27,7 @@ Vector3::Vector3(float a, float b, float c)
     z = c;
 }
 
-Vector3::Vector3(Vector3 &v)
+Vector3::Vector3(const Vector3 &v)
 {
     x = v.x;
     y = v.y;

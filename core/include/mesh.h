@@ -63,11 +63,11 @@ public:
     }
     ~Mesh();
 
-    void setNumVertices(int numVertex);
-    void setNumTriangles(int numTriangle);
+    void setNumVertices(uint32_t numVertex);
+    void setNumTriangles(uint32_t numTriangle);
 
-    void addVertex(int pos, Vertex &v);
-    void addTriangle(int pos, Triangle &t);
+    void addVertex(uint32_t pos, Vertex &v);
+    void addTriangle(uint32_t pos, Triangle &t);
 
     void importAIMesh(const aiMesh *dstMesh);
 

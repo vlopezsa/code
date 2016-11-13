@@ -30,6 +30,9 @@ public:
     //! Return an object normal based on an intersection
     Vector4 getNormal(const IntersectionInfo& I) const;
 
+    //! Return UV coords on an intersection
+    Vector2 getUV(const IntersectionInfo& I) const;
+
     //! Return a bounding box for this object
     BBox getBBox() const;
 

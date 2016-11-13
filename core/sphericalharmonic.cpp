@@ -3,7 +3,9 @@
 
 #include "sphericalharmonic.h"
 
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
+#endif
 #include <math.h>
 
 static std::set<SHImplementation> SHImplementation_Set(__SH_IMP_TYPE_DEF);

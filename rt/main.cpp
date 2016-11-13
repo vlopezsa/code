@@ -1,11 +1,15 @@
 #include <iostream>
+#include <iomanip>
 #include <thread>
 #include <mutex>
+#include <ctime>
 
 #include <GL/glut.h>
 #include <AntTweakBar.h>
 
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
+#endif
 #include <math.h>
 
 #include "render.h"
@@ -14,6 +18,7 @@
 #include "osutil.h"
 #include "scene.h"
 #include "thirdparty.h"
+#include "environmentprobe.h"
 #include "montecarlo.h"
 
 /* Window related variables */
@@ -69,7 +74,7 @@ std::vector<Line> lines;
 static float light_position[] = { 10.0f, 10.0f, 10.0f };
 static float light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-Sampler *mcSampler = new MonteCarlo(32 * 32);
+Sampler *mcSampler = new MonteCarlo(24 * 24);
 
 std::mutex g_rtProgMutex;
 
@@ -93,41 +98,89 @@ typedef struct pointLight
     Color3 diffuse;
 } pointLight;
 
-Color3 getRadiance(Ray &ray, pointLight &light, uint32_t bounceCnt)
+Color3 getSkyLight(Vector4 &pos, Vector4 &n)
 {
     Color3 color;
 
     IntersectionInfo I;
 
+    EnvironmentMap *envMap = g_Scene.envMap;
+
+    for (uint32_t si = 0; si < mcSampler->numSamples; si++)
+    {
+        float costerm = n* mcSampler->Samples[si].Cartesian;
+
+        // only the hemisphere pointer toward the normal
+        if (costerm > 0.0f)
+        {
+            Vector4 bPos = pos + (mcSampler->Samples[si].Cartesian*0.00001);
+            Ray bRay(bPos, mcSampler->Samples[si].Cartesian);
+
+            // only asked if current direction is not occluded
+            bool hitSky = g_Scene.bvh->getIntersection(bRay, &I, true);
+
+            if (!hitSky)
+            {
+                color += (envMap->getSampleDir(mcSampler->Samples[si].Cartesian) * costerm);
+            }
+        }
+    }
+
+    float scale = (float)(4.0f * M_PI) / (float)mcSampler->numSamples;
+
+    color *= scale;
+
+    return color;
+}
+
+Color3 getRadiance(Ray &ray, pointLight *light, bool skyLight=true, uint32_t bounceCnt=0)
+{
+    Color3 color = Color3(0.0f);
+
+    IntersectionInfo I;
+
+    EnvironmentMap *envMap = g_Scene.envMap;
+
     bool hit = g_Scene.bvh->getIntersection(ray, &I, false);
 
     if (hit) {
-        Vector4 lightDir = Vector4(light.pos) - I.hit;
-
-        float distLight = length(lightDir);
-
-        lightDir = normalize(lightDir);
-
-        Ray rayLight(I.hit + (lightDir*0.0001f), lightDir);
-        IntersectionInfo ILight;
-
-        bool hitLight = g_Scene.bvh->getIntersection(rayLight, &ILight, false);
-
         TriangleObj *tr = (TriangleObj *)I.object;
         Mesh *m = &g_Scene.mesh[tr->meshId];
         Material *mat = &g_Scene.material[m->materialIdx];
         Vector4 n = tr->getNormal(I);
+        Vector2 uv = tr->getUV(I);
 
-        if (!hitLight)
+        // Get Light from environment
+        if (skyLight)
         {
-            float lightCont = fmax(lightDir * n, 0.0f);
-
-            color = mat->Color.diffuse * light.diffuse * lightCont;
+            color += getSkyLight(I.hit, n);
         }
 
+        // Get Light Contribution
+        if (light)
+        {
+            Vector4 lightDir = Vector4(light->pos) - I.hit;
+
+            float distLight = length(lightDir);
+
+            lightDir = normalize(lightDir);
+
+            Ray rayLight(I.hit + (lightDir*0.0001f), lightDir);
+            IntersectionInfo ILight;
+
+            bool hitLight = g_Scene.bvh->getIntersection(rayLight, &ILight, false);
+
+            if (!hitLight)
+            {
+                float lightCont = fmax(lightDir * n, 0.0f);
+
+                color += (light->diffuse * lightCont);
+            }
+        }
+
+        // Get Indirect Light
         if (bounceCnt > 0)
         {
-            uint32_t sampleCnt = 0;
             Color3  idrRadiance;
             for (uint32_t si = 0; si < mcSampler->numSamples; si++)
             {
@@ -139,19 +192,31 @@ Color3 getRadiance(Ray &ray, pointLight &light, uint32_t bounceCnt)
                     Vector4 bPos = I.hit + (mcSampler->Samples[si].Cartesian*0.00001);
                     Ray bRay(bPos, mcSampler->Samples[si].Cartesian);
 
-                    idrRadiance += getRadiance(bRay, light, bounceCnt - 1) * costerm;
+                    idrRadiance += getRadiance(bRay, light, skyLight, bounceCnt - 1) * costerm;
                 }
-
-                sampleCnt++;
             }
-            
-            
+
             float scale = (float)(4.0f * M_PI) / (float)mcSampler->numSamples;
 
             idrRadiance *= scale;
 
             color += idrRadiance;
         }
+
+        if (mat->getNumTexDiffuse() > 0)
+            color *= g_Scene.texture.sampleTextureImage(mat->texIdx.diffuse[0], uv);
+        else
+            color *= mat->Color.diffuse;
+    }
+    else
+    {
+        Vector3 v3d;
+
+        v3d.x = ray.d.x;
+        v3d.y = ray.d.y;
+        v3d.z = ray.d.z;
+
+        color = envMap->getSampleDir(v3d);
     }
 
     return color;
@@ -228,7 +293,8 @@ void _partialRayTrace(uint8_t *outBuf,
                     Position, camera_u, camera_v, camera_dir,
                     i, j, Width, Height,
                     40.0f, offList[oi].x, offList[oi].y);
-                outColor += getRadiance(ray, light, 1);
+                //outColor += getRadiance(ray, &light, true, 0);
+                outColor += getRadiance(ray, NULL, true, 1);
             }
 
             outColor /= (float)offList.size();
@@ -236,19 +302,27 @@ void _partialRayTrace(uint8_t *outBuf,
             outBuf[index + 0] = (uint8_t)clamp((outColor.b * 255.0f), 0.0f, 255.0f);
             outBuf[index + 1] = (uint8_t)clamp((outColor.g * 255.0f), 0.0f, 255.0f);
             outBuf[index + 2] = (uint8_t)clamp((outColor.r * 255.0f), 0.0f, 255.0f);
-        }
 
-        localRTCnt++;
+            localRTCnt++;
 
-        if (localRTCnt % 100 == 0)
-        {
-            g_rtProgMutex.lock();
-            g_cntRTProg += localRTCnt;
-            printf("\t\tPixels Computed: %u / %u\r",
-                g_cntRTProg, g_cntRTTotal);
-            g_rtProgMutex.unlock();
+            if (localRTCnt % 100 == 0)
+            {
+                g_rtProgMutex.lock();
+                g_cntRTProg += localRTCnt;
+                printf("\t\tPixels Computed: %u / %u\r",
+                    g_cntRTProg, g_cntRTTotal);
+                g_rtProgMutex.unlock();
+
+                localRTCnt = 0;
+            }
         }
     }
+
+    g_rtProgMutex.lock();
+    g_cntRTProg += localRTCnt;
+    printf("\t\tPixels Computed: %u / %u\r",
+        g_cntRTProg, g_cntRTTotal);
+    g_rtProgMutex.unlock();
 }
 
 void TW_CALL rayTrace(void *)
@@ -256,11 +330,16 @@ void TW_CALL rayTrace(void *)
     if (g_Scene.bvh == NULL)
         return;
 
+    std::time_t t;
+
+    t = std::time(nullptr);
+    std::cout << "RT Started: " << std::put_time(std::localtime(&t), "%c") << std::endl;
+
     Image *img = g_SceneRT.texture.getTextureImage(0U);
     uint8_t *out = img->getData();
 
     // Init progress info
-    g_cntRTProg = 0;
+    g_cntRTProg  = 0;
     g_cntRTTotal = img->Width * img->Height;
 
     uint32_t numProc = std::thread::hardware_concurrency();
@@ -271,6 +350,10 @@ void TW_CALL rayTrace(void *)
     else
         nThread = numProc;
 
+#ifdef _DEBUG
+    nThread = 1;
+#endif
+
     uint32_t split = (uint32_t)ceilf((float)img->Height / (float)nThread);
 
     if (split <= 1)
@@ -278,6 +361,8 @@ void TW_CALL rayTrace(void *)
         nThread = 1;
         split = img->Height;
     }
+
+    std::cout << "RT Workers: " << nThread << std::endl;
 
     std::vector<std::thread> threads;
 
@@ -291,7 +376,8 @@ void TW_CALL rayTrace(void *)
 
     img->SaveToFile("output-rt.png");
 
-    std::cout << "RT Done!" << std::endl;
+    t = std::time(nullptr);
+    std::cout << "RT Ended: " << std::put_time(std::localtime(&t), "%c") << std::endl;
 }
 
 void UpdateEyePositionFromMouse()
@@ -538,12 +624,32 @@ void cameraSetup()
     g_Camera->m_MaxForwardVelocity = 100.0f;
     g_Camera->m_MaxPitchRate = 5.0f;
     g_Camera->m_MaxHeadingRate = 5.0f;
+
+    /*
+    //theCabing
+    g_Camera->m_PitchDegrees = 3.00001;
+    g_Camera->m_HeadingDegrees = -12.8;
+
+    g_Camera->m_Position.x = 5.70619f;
+    g_Camera->m_Position.y = 1.33641f;
+    g_Camera->m_Position.z = -14.8241f;
+    */
+    /*
+    //test Scene01
     g_Camera->m_PitchDegrees = 23.2;
     g_Camera->m_HeadingDegrees = -37.4;
 
     g_Camera->m_Position.x = 9.52788f;
     g_Camera->m_Position.y = 9.29302f;
     g_Camera->m_Position.z = -13.0324f;
+    */
+    //classroom
+    g_Camera->m_PitchDegrees = 8.6;
+    g_Camera->m_HeadingDegrees = 30.2;
+
+    g_Camera->m_Position.x = -1.00906;
+    g_Camera->m_Position.y = 1.81881;
+    g_Camera->m_Position.z = -3.5933;
 }
 
 void toolBoxSetup()
@@ -652,6 +758,15 @@ void initRTScene()
     m->index[5] = 3;
 }
 
+void sceneSetup()
+{
+    EnvironmentProbe *ep = new EnvironmentProbe();
+
+    ep->setLightProbe(&g_Scene.texture, "D:\\Serious\\Doctorado\\code\\probes\\forest.png");
+
+    g_Scene.envMap = ep;
+}
+
 int main(int argc, char **argv)
 {
     initThirdParty(&argc, &argv);
@@ -662,6 +777,8 @@ int main(int argc, char **argv)
     cameraSetup();
 
     toolBoxSetup();
+
+    sceneSetup();
 
     initRTScene();
 

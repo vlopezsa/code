@@ -136,6 +136,26 @@ Vector4 TriangleObj::getNormal(const IntersectionInfo& I) const
     return normalize(vSum);
 }
 
+
+Vector2 TriangleObj::getUV(const IntersectionInfo& I) const
+{
+    Vector2 uv;
+
+    uint32_t iv1, iv2, iv3;
+
+    iv1 = mesh->triangle[triId].v1;
+    iv2 = mesh->triangle[triId].v2;
+    iv3 = mesh->triangle[triId].v3;
+
+    const Vector2 &v0 = mesh->vertex[iv1].tex;
+    const Vector2 &v1 = mesh->vertex[iv2].tex;
+    const Vector2 &v2 = mesh->vertex[iv3].tex;
+
+    uv = (v0*I.bary.z) + (v1*I.bary.x) + (v2*I.bary.y);
+
+    return uv;
+}
+
 BBox TriangleObj::getBBox() const
 {
     return this->bbox;

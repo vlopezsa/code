@@ -1,7 +1,9 @@
 #include <vector>
 #include "SHGeomerics.h"
 
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
+#endif
 #include <math.h>
 
 float __geomeric_f[] = {

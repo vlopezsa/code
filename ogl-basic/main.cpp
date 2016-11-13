@@ -12,6 +12,7 @@
 #include "osutil.h"
 #include "scene.h"
 #include "thirdparty.h"
+#include "environmentprobe.h"
 
 /* Window related variables */
 char *g_strAppTitle = "OpenGL Simple";
@@ -92,7 +93,7 @@ void ChangeSize(GLsizei w, GLsizei h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(40.0, (GLdouble)w / (GLdouble)h, 0.6, 20000.0);
+    gluPerspective(40.0, (GLdouble)w / (GLdouble)h, 0.1, 20000.0);
     glMatrixMode(GL_MODELVIEW);
 
     TwWindowSize(w, h);
@@ -219,6 +220,15 @@ void glutSetup()
     glutIdleFunc(IdleFunc);
 }
 
+void envMapSetup()
+{
+    EnvironmentProbe *ep = new EnvironmentProbe();
+
+    ep->setLightProbe(&g_Scene.texture, "D:\\Serious\\Doctorado\\code\\probes\\forest.png");
+
+    g_Scene.envMap = ep;
+}
+
 void cameraSetup()
 {
     g_Camera->m_MaxForwardVelocity = 100.0f;
@@ -261,6 +271,8 @@ int main(int argc, char **argv)
     glutSetup();
 
     cameraSetup();
+
+    envMapSetup();
 
     toolBoxSetup();
 

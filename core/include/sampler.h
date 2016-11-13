@@ -9,8 +9,8 @@ typedef struct
     Vector3 Cartesian;
     Vector2 Spherical;
     struct {
-        uint32_t x;
-        uint32_t y;
+        float x;
+        float y;
     } Square;
 }SamplePoint;
 
