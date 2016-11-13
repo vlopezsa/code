@@ -1,5 +1,6 @@
 #include <iostream>
 #include <thread>
+#include <mutex>
 
 #include <GL/glut.h>
 #include <AntTweakBar.h>
@@ -68,7 +69,12 @@ std::vector<Line> lines;
 static float light_position[] = { 10.0f, 10.0f, 10.0f };
 static float light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-Sampler *mcSampler = new MonteCarlo(4 * 4);
+Sampler *mcSampler = new MonteCarlo(32 * 32);
+
+std::mutex g_rtProgMutex;
+
+uint32_t g_cntRTProg;
+uint32_t g_cntRTTotal;
 
 static inline float clamp(float val, float min, float max)
 {
@@ -138,14 +144,37 @@ Color3 getRadiance(Ray &ray, pointLight &light, uint32_t bounceCnt)
 
                 sampleCnt++;
             }
+            
+            
+            float scale = (float)(4.0f * M_PI) / (float)mcSampler->numSamples;
 
-            idrRadiance /= (float)sampleCnt;
+            idrRadiance *= scale;
 
-            color = idrRadiance;
+            color += idrRadiance;
         }
     }
 
     return color;
+}
+
+inline Ray createCameraRay(
+    Vector3 &Position,
+    Vector3 &camera_u, Vector3 &camera_v, 
+    Vector3 &camera_dir,
+    uint32_t x, uint32_t y, 
+    uint32_t Width, uint32_t Height, 
+    float fovy, float offX, float offY)
+{
+    float u = ((float)x + offX) / (float)(Width - 1) - 0.5f;
+    float v = ((float)(Height - 1 - y) + offY) / (float)(Height - 1) - 0.5f;
+    float fov = 0.5f / tanf(40.f * 3.14159265*.5f / 180.f);
+
+    // This is only valid for square aspect ratio images
+    Vector3 rayDir = camera_u*u + camera_v*v + camera_dir*fov;
+    rayDir.normalize();
+    Ray ray(Position, rayDir);
+
+    return ray;
 }
 
 void _partialRayTrace(uint8_t *outBuf,
@@ -154,6 +183,8 @@ void _partialRayTrace(uint8_t *outBuf,
     uint32_t Width, uint32_t Height,
     uint32_t pitch)
 {
+    uint32_t localRTCnt = 0;
+
     Vector3 Up = g_Camera->m_Up;
     Vector3 Position = g_Camera->m_Position;
     Vector3 camera_dir = g_Camera->m_Direction;
@@ -177,24 +208,45 @@ void _partialRayTrace(uint8_t *outBuf,
     Vector3 camera_v = cross(camera_u, camera_dir);
     camera_v.normalize();
 
+    std::vector<Vector2> offList;
+
+    offList.push_back(Vector2(0.25, 0.25));
+    offList.push_back(Vector2(0.75, 0.5));
+    offList.push_back(Vector2(0.25, 0.75));
+    offList.push_back(Vector2(0.75, 0.75));
+
     for (size_t j = startY; j<endY && j<Height; j++) {
         size_t index = j * pitch;
 
         for (size_t i = startX; i<endX && i<Width; i++, index += 3) {
-            float u = ((float)i + .5f) / (float)(Width - 1) - .5f;
-            float v = ((float)(Height - 1 - j) + .5f) / (float)(Height - 1) - .5f;
-            float fov = 0.5f / tanf(40.f * 3.14159265*.5f / 180.f);
+            Color3 outColor;
 
-            // This is only valid for square aspect ratio images
-            Vector3 rayDir = camera_u*u + camera_v*v + camera_dir*fov;
-            rayDir.normalize();
-            Ray ray(Position, rayDir);
+            // Using 4 samples per pixel
+            for (uint32_t oi = 0; oi < offList.size(); oi++)
+            {
+                Ray ray = createCameraRay(
+                    Position, camera_u, camera_v, camera_dir,
+                    i, j, Width, Height,
+                    40.0f, offList[oi].x, offList[oi].y);
+                outColor += getRadiance(ray, light, 1);
+            }
 
-            Color3 outColor = getRadiance(ray, light, 1);
+            outColor /= (float)offList.size();
 
             outBuf[index + 0] = (uint8_t)clamp((outColor.b * 255.0f), 0.0f, 255.0f);
             outBuf[index + 1] = (uint8_t)clamp((outColor.g * 255.0f), 0.0f, 255.0f);
             outBuf[index + 2] = (uint8_t)clamp((outColor.r * 255.0f), 0.0f, 255.0f);
+        }
+
+        localRTCnt++;
+
+        if (localRTCnt % 100 == 0)
+        {
+            g_rtProgMutex.lock();
+            g_cntRTProg += localRTCnt;
+            printf("\t\tPixels Computed: %u / %u\r",
+                g_cntRTProg, g_cntRTTotal);
+            g_rtProgMutex.unlock();
         }
     }
 }
@@ -206,6 +258,10 @@ void TW_CALL rayTrace(void *)
 
     Image *img = g_SceneRT.texture.getTextureImage(0U);
     uint8_t *out = img->getData();
+
+    // Init progress info
+    g_cntRTProg = 0;
+    g_cntRTTotal = img->Width * img->Height;
 
     uint32_t numProc = std::thread::hardware_concurrency();
     uint32_t nThread;
