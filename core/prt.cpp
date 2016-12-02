@@ -191,14 +191,12 @@ void PRT::preComputeVertexCoeff(Vertex & v, uint32_t &iMesh, uint32_t &iTrian)
 
     bool occluded = false;
 
-    Vector3 posOffset = v.position + (v.normal*0.02f);
+    Vector3 posOffset = v.position + (v.normal*0.0001f);
 
     /* project vertice in all bands per sample */
     for (uint32_t i = 0; i < sampler->numSamples; i++)
     {
-        Ray ray(posOffset,
-            sampler->Samples[i].Cartesian
-            );
+        Ray ray(posOffset, sampler->Samples[i].Cartesian);
 
          /* this will generate shadows */
         occluded = scene->bvh->getIntersection(ray, &intInf, true);

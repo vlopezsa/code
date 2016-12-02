@@ -76,8 +76,8 @@ bool Scene::loadFromFile(char * strFile)
         aiProcess_JoinIdenticalVertices |
         aiProcess_PreTransformVertices |
         //aiProcess_Triangulate |
-        aiProcess_GenNormals |
-        aiProcess_GenSmoothNormals |
+        // aiProcess_GenNormals |
+        // aiProcess_GenSmoothNormals |
         aiProcess_FindDegenerates |
         aiProcess_FindInvalidData |
         //aiProcess_RemoveRedundantMaterials |

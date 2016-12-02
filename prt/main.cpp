@@ -18,8 +18,8 @@
 
 /* Window related variables */
 char *g_strAppTitle = "Pre-Computed Radiance Transfer";
-int g_winWidth = 1024;
-int g_winHeight = 768;
+int g_winWidth = 800;
+int g_winHeight = 800;
 int g_winGlutID;
 
 /* Render related variables */
@@ -100,7 +100,7 @@ void ChangeSize(GLsizei w, GLsizei h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(45.0, (GLdouble)w / (GLdouble)h, 0.1, 20000.0);
+    gluPerspective(40.0, (GLdouble)w / (GLdouble)h, 0.1, 20000.0);
     glMatrixMode(GL_MODELVIEW);
 
     TwWindowSize(w, h);
@@ -254,12 +254,12 @@ void cameraSetup()
     g_Camera->m_MaxForwardVelocity = 100.0f;
     g_Camera->m_MaxPitchRate = 5.0f;
     g_Camera->m_MaxHeadingRate = 5.0f;
-    g_Camera->m_PitchDegrees = 28.8;
-    g_Camera->m_HeadingDegrees = -39.6;
+    g_Camera->m_PitchDegrees = -1.2;
+    g_Camera->m_HeadingDegrees = 160.2;
 
-    g_Camera->m_Position.x = 9.09463f;
-    g_Camera->m_Position.y = 9.62256f;
-    g_Camera->m_Position.z = -10.9857f;
+    g_Camera->m_Position.x = -1.05913;
+    g_Camera->m_Position.y = 1.58041;
+    g_Camera->m_Position.z = 4.78437;
 }
 
 void toolBoxSetup()

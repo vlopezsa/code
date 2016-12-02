@@ -74,7 +74,7 @@ std::vector<Line> lines;
 static float light_position[] = { 10.0f, 10.0f, 10.0f };
 static float light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-Sampler *mcSampler = new MonteCarlo(24 * 24);
+Sampler *mcSampler = new MonteCarlo(32 * 32);
 
 std::mutex g_rtProgMutex;
 
@@ -113,7 +113,7 @@ Color3 getSkyLight(Vector4 &pos, Vector4 &n)
         // only the hemisphere pointer toward the normal
         if (costerm > 0.0f)
         {
-            Vector4 bPos = pos + (mcSampler->Samples[si].Cartesian*0.00001);
+            Vector4 bPos = pos + (mcSampler->Samples[si].Cartesian*0.001);
             Ray bRay(bPos, mcSampler->Samples[si].Cartesian);
 
             // only asked if current direction is not occluded
@@ -165,12 +165,12 @@ Color3 getRadiance(Ray &ray, pointLight *light, bool skyLight=true, uint32_t bou
 
             lightDir = normalize(lightDir);
 
-            Ray rayLight(I.hit + (lightDir*0.0001f), lightDir);
+            Ray rayLight(I.hit + (lightDir*0.001f), lightDir);
             IntersectionInfo ILight;
 
             bool hitLight = g_Scene.bvh->getIntersection(rayLight, &ILight, false);
 
-            if (!hitLight)
+            if (!hitLight || (hitLight && ILight.t>distLight))
             {
                 float lightCont = fmax(lightDir * n, 0.0f);
 
@@ -189,7 +189,7 @@ Color3 getRadiance(Ray &ray, pointLight *light, bool skyLight=true, uint32_t bou
                 // only the hemisphere pointer toward the normal
                 if (costerm > 0.0f)
                 {
-                    Vector4 bPos = I.hit + (mcSampler->Samples[si].Cartesian*0.00001);
+                    Vector4 bPos = I.hit + (mcSampler->Samples[si].Cartesian*0.001);
                     Ray bRay(bPos, mcSampler->Samples[si].Cartesian);
 
                     idrRadiance += getRadiance(bRay, light, skyLight, bounceCnt - 1) * costerm;
@@ -205,8 +205,8 @@ Color3 getRadiance(Ray &ray, pointLight *light, bool skyLight=true, uint32_t bou
 
         if (mat->getNumTexDiffuse() > 0)
             color *= g_Scene.texture.sampleTextureImage(mat->texIdx.diffuse[0], uv);
-        else
-            color *= mat->Color.diffuse;
+        
+        color *= mat->Color.diffuse;
     }
     else
     {
@@ -232,7 +232,7 @@ inline Ray createCameraRay(
 {
     float u = ((float)x + offX) / (float)(Width - 1) - 0.5f;
     float v = ((float)(Height - 1 - y) + offY) / (float)(Height - 1) - 0.5f;
-    float fov = 0.5f / tanf(40.f * 3.14159265*.5f / 180.f);
+    float fov = 0.5f / tanf(fovy * 3.14159265*.5f / 180.f);
 
     // This is only valid for square aspect ratio images
     Vector3 rayDir = camera_u*u + camera_v*v + camera_dir*fov;
@@ -267,14 +267,15 @@ void _partialRayTrace(uint8_t *outBuf,
     camera_dir.normalize();
 
     // Camera tangent space
-    Vector3 camera_u = cross(camera_dir, Up);
+    Vector3 camera_u = cross(camera_dir, Up) * -1.0f;
     camera_u.normalize();
 
-    Vector3 camera_v = cross(camera_u, camera_dir);
+    Vector3 camera_v = cross(camera_u, camera_dir) * -1.0f;
     camera_v.normalize();
 
     std::vector<Vector2> offList;
 
+    //offList.push_back(Vector2(0.5, 0.5));
     offList.push_back(Vector2(0.25, 0.25));
     offList.push_back(Vector2(0.75, 0.5));
     offList.push_back(Vector2(0.25, 0.75));
@@ -293,8 +294,8 @@ void _partialRayTrace(uint8_t *outBuf,
                     Position, camera_u, camera_v, camera_dir,
                     i, j, Width, Height,
                     40.0f, offList[oi].x, offList[oi].y);
-                //outColor += getRadiance(ray, &light, true, 0);
-                outColor += getRadiance(ray, NULL, true, 1);
+                outColor += getRadiance(ray, &light, false, 1);
+                //outColor += getRadiance(ray, NULL, true, 0);
             }
 
             outColor /= (float)offList.size();
@@ -348,7 +349,7 @@ void TW_CALL rayTrace(void *)
     if (numProc <= 0)
         nThread = 1;
     else
-        nThread = numProc;
+        nThread = numProc-1;
 
 #ifdef _DEBUG
     nThread = 1;
@@ -643,6 +644,7 @@ void cameraSetup()
     g_Camera->m_Position.y = 9.29302f;
     g_Camera->m_Position.z = -13.0324f;
     */
+    /*
     //classroom
     g_Camera->m_PitchDegrees = 8.6;
     g_Camera->m_HeadingDegrees = 30.2;
@@ -650,6 +652,15 @@ void cameraSetup()
     g_Camera->m_Position.x = -1.00906;
     g_Camera->m_Position.y = 1.81881;
     g_Camera->m_Position.z = -3.5933;
+    */
+
+    //BlackSmith
+    g_Camera->m_PitchDegrees = -1.2;
+    g_Camera->m_HeadingDegrees = 160.2;
+
+    g_Camera->m_Position.x = -1.05913;
+    g_Camera->m_Position.y = 1.58041;
+    g_Camera->m_Position.z = 4.78437;
 }
 
 void toolBoxSetup()
