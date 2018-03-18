@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\source\Platform\Platform.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Platform\Log.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Game\Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Platform\Thread\Atomic.cpp">
+      <Filter>Platform\Thread</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Game">
+      <UniqueIdentifier>{58c345d2-a26e-45f6-ae11-4c9eb442885a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{9116053f-2448-4709-b398-76818d178f22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Thread">
+      <UniqueIdentifier>{67661fe2-0819-4c20-becb-e1431b45009d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\source\Platform\Platform.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Platform\Log.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Game\Game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Platform\Types.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Platform\Thread\Atomic.h">
+      <Filter>Platform\Thread</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
