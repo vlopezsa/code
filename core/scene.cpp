@@ -14,6 +14,12 @@ void Scene::__release()
     mesh.clear();
     material.clear();
 
+	if (envMap)
+	{
+		delete envMap;
+	}
+	envMap = NULL;
+
     if (bvh)
     {
         delete bvh;

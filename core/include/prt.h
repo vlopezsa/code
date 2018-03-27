@@ -8,7 +8,7 @@
 #include "shstandard.h"
 #include "sampler.h"
 #include "scene.h"
-
+#include "environmentmap.h"
 
 class PRT: public Light
 {
@@ -52,6 +52,8 @@ public:
     Vector3 getIntensityAt(Vertex &v, bool clamp = false);
 
     int preComputeLight();
+
+	int preComputeLight(EnvironmentMap *e);
 
     /*
         useBackup - true  try to locate precomputede values for

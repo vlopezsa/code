@@ -103,6 +103,40 @@ void PRT::computeLightIntensityAtVertices()
     }
 }
 
+int PRT::preComputeLight(EnvironmentMap *e)
+{
+	if (!e)
+		return -1;
+
+	if (!sampler)
+		return -1;
+
+	if (!sh)
+		return -1;
+
+	lightCoeff.clear();
+	lightCoeff.resize(sh->numBaseCoeff);
+
+	Vector3 intensity;
+
+	for (uint32_t i = 0; i < sampler->numSamples; i++)
+	{
+		intensity = e->getSampleDir(sampler->Samples[i].Cartesian);
+
+		for (uint32_t j = 0; j < sh->numBaseCoeff; j++)
+		{
+			lightCoeff[j].x += intensity.x * sh->Coefficient[i][j];
+			lightCoeff[j].y += intensity.y * sh->Coefficient[i][j];
+			lightCoeff[j].z += intensity.z * sh->Coefficient[i][j];
+		}
+	}
+
+	/* normalize light coeff */
+	sh->scaleFunctionCoeff(lightCoeff);
+
+	return 0;
+}
+
 int PRT::preComputeLight()
 {
     if (!sampler)
@@ -119,13 +153,13 @@ int PRT::preComputeLight()
     for (uint32_t i = 0; i < sampler->numSamples; i++)
     {
         /* for testing purposing, using directional light */
-        if (sampler->Samples[i].Spherical.theta <  0.5f &&
+        /*if (sampler->Samples[i].Spherical.theta <  0.0f &&
             sampler->Samples[i].Spherical.theta > -0.5f
-            )
-       /* if(
+            )*/
+        if(
             sampler->Samples[i].Cartesian.y > 0.0f &&
-            sampler->Samples[i].Cartesian.x > -0.2f
-          )*/
+            sampler->Samples[i].Cartesian.x < 0.0f
+          )
             intensity = 1.0f;
         else
             intensity = 0.0f;

@@ -1,4 +1,5 @@
 #include "texturemgr.h"
+#include "vector3.h"
 
 TextureManager::TextureManager()
 {
@@ -78,4 +79,49 @@ Image * TextureManager::getTextureImage(uint32_t ID)
     return imgList[ID];
 }
 
+Color3 TextureManager::sampleTextureImage(uint32_t ID, Vector2 &uvIn) {
+	Color3 color;
 
+	Image *img = getTextureImage(ID);
+
+	if (!img)
+		return color;
+
+	Vector2 uv = uvIn;
+
+	// Wrap UV coordinates
+	if (uv.x > 1.0 || uv.x < -1.0f)
+	{
+		uv.x = fmodf(uv.x, 1.0f);
+	}
+
+	if (uv.y > 1.0 || uv.y < -1.0f)
+	{
+		uv.y = fmodf(uv.y, 1.0f);
+	}
+
+	if (uv.x < 0)
+	{
+		uv.x = 1.0f + uv.x;
+	}
+
+	if (uv.y < 0)
+	{
+		uv.y = 1.0f + uv.y;
+	}
+
+	uint32_t x, y;
+
+	x = (uint32_t)(uv.x*(float)img->Width);
+	y = (uint32_t)(uv.y*(float)img->Height);
+
+	uint32_t offset = y * img->Width + x;
+
+	offset *= 3;
+
+	color.r = (float)img->Data[offset + 2] / 255.0f;
+	color.g = (float)img->Data[offset + 1] / 255.0f;
+	color.b = (float)img->Data[offset + 0] / 255.0f;
+
+	return color;
+}

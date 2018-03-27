@@ -13,6 +13,7 @@
 #include "scene.h"
 #include "thirdparty.h"
 #include "prt.h"
+#include "environmentprobe.h"
 #include "montecarlo.h"
 
 /* Window related variables */
@@ -263,10 +264,23 @@ void toolBoxSetup()
     TwAddVarRW(bar, "Enable", TW_TYPE_BOOL8, &g_prtEnable, "group='PRT'");
 }
 
+void envMapSetup()
+{
+	EnvironmentProbe *ep = new EnvironmentProbe();
+
+	ep->setLightProbe(&g_Scene.texture, "F:\\Serious\\Doctorado\\code\\probes\\forest.png");
+
+	g_Scene.envMap = ep;
+
+	g_PRT.preComputeLight(ep);
+}
+
 void sceneSetup()
 {
     g_PRT.setSampler(new MonteCarlo(64 * 64));
     g_PRT.preComputeLight();
+
+	envMapSetup();
 }
 
 void CleanUp()

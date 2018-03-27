@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "image.h"
+#include "vector2.h"
+#include "vector3.h"
 
 #define TEXTURE_INVALID 0xFFFFFFFFU
 
@@ -29,4 +31,6 @@ public:
     Image *getTextureImage(uint32_t ID);
 
     uint32_t getNumTextures() { return (uint32_t)imgList.size(); }
+
+	Color3 sampleTextureImage(uint32_t ID, Vector2 &uv);
 };

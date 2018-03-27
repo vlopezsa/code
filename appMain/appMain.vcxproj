@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{9C7EE3BA-8FB9-460E-A44B-04BADFF4C998}</ProjectGuid>
+    <ProjectGuid>{6FD8D10C-852B-4301-BD92-3D491C08C968}</ProjectGuid>
     <RootNamespace>appMain</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -58,20 +58,22 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Falcor\Framework\Source\Falcor.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Falcor\Framework\Source\Falcor.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Falcor\Framework\Source\Falcor.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Falcor\Framework\Source\Falcor.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)\source;$(IncludePath)</IncludePath>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -80,10 +82,6 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <CompileAsManaged>
-      </CompileAsManaged>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -121,18 +119,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\Game\Game.cpp" />
-    <ClCompile Include="..\source\Platform\Log.cpp" />
-    <ClCompile Include="..\source\Platform\Platform.cpp" />
-    <ClCompile Include="..\source\Platform\Thread\Atomic.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Deferred.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\Game\Game.h" />
-    <ClInclude Include="..\source\Platform\Log.h" />
-    <ClInclude Include="..\source\Platform\Platform.h" />
-    <ClInclude Include="..\source\Platform\Thread\Atomic.h" />
-    <ClInclude Include="..\source\Platform\Types.h" />
+    <ProjectReference Include="..\..\Falcor\Framework\Source\Falcor.vcxproj">
+      <Project>{3b602f0e-3834-4f73-b97d-7dfc91597a98}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Data\LightingPassCommon.h" />
+    <ClInclude Include="Deferred.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\DeferredPass.ps.glsl" />
+    <None Include="Data\LightingPass.ps.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\DeferredPass.ps.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Data\LightingPass.ps.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

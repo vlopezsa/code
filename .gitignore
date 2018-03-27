@@ -92,6 +92,8 @@ ipch/
 *.sdf
 *.cachefile
 
+**.vcxproj.filters
+
 # Visual Studio profiler
 *.psess
 *.vsp

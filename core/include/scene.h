@@ -5,6 +5,7 @@
 
 #include "graphics.h"
 #include "camera.h"
+#include "environmentmap.h"
 #include "mesh.h"
 #include "material.h"
 #include "texturemgr.h"
@@ -23,6 +24,7 @@ public:
     std::vector<Object *> trilist;
     TextureManager        texture;
     Camera                camera;
+	EnvironmentMap       *envMap;
     BVH                  *bvh;
 
     uint32_t              triTotal;
