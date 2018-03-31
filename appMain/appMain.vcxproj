@@ -70,7 +70,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)\source;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\3rd_party\Eigen;$(SolutionDir)\source;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -122,17 +122,25 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Game\Game.cpp" />
+    <ClCompile Include="..\source\Graphics\DX11\GraphicsDX11.cpp" />
+    <ClCompile Include="..\source\Graphics\Graphics.cpp" />
     <ClCompile Include="..\source\Platform\Log.cpp" />
     <ClCompile Include="..\source\Platform\Platform.cpp" />
     <ClCompile Include="..\source\Platform\Thread\Atomic.cpp" />
+    <ClCompile Include="..\source\Render\Render.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\source\Core\Math.h" />
+    <ClInclude Include="..\source\Core\Settings.h" />
     <ClInclude Include="..\source\Game\Game.h" />
+    <ClInclude Include="..\source\Graphics\DX11\GraphicsDX11.h" />
+    <ClInclude Include="..\source\Graphics\Graphics.h" />
     <ClInclude Include="..\source\Platform\Log.h" />
     <ClInclude Include="..\source\Platform\Platform.h" />
     <ClInclude Include="..\source\Platform\Thread\Atomic.h" />
     <ClInclude Include="..\source\Platform\Types.h" />
+    <ClInclude Include="..\source\Render\Render.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

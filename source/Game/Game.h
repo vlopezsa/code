@@ -21,6 +21,8 @@ public:
 
 	void Release();
 
+	void Exit();
+
 	GAME_STATUS getStatus() { return m_Status; }
 
 	void setStatus(GAME_STATUS nStatus);

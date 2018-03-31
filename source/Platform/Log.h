@@ -47,4 +47,4 @@ public:
 
 #define LOG(X, ...)		{ Log::Instance().Write(Log::LOG_DEFAULT, "LOG: "    X, __VA_ARGS__); }
 #define WARNING(X, ...) { Log::Instance().Write(Log::LOG_DEFAULT, "WARNING: "X, __VA_ARGS__); }
-#define ERROR(X, ...)	{ Log::Instance().Write(Log::LOG_DEFAULT, "ERROR: "  X, __VA_ARGS__); }
+#define ERR(X, ...)	{ Log::Instance().Write(Log::LOG_DEFAULT, "ERROR: "  X, __VA_ARGS__); }

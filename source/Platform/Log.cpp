@@ -24,7 +24,7 @@ bool Log::isValidSystem(LOG_SYSTEM type)
 {
 	if ((int32)type < 0 || (int32)type >= MAX_NUM_LOG_SYSTEM)
 	{
-		ERROR("Invalid LOG_SYSTEM type: %d", (int32)type);
+		ERR("Invalid LOG_SYSTEM type: %d", (int32)type);
 		return false;
 	}
 
