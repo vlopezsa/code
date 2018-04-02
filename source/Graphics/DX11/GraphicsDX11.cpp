@@ -238,15 +238,19 @@ void GraphicsDX11::Present()
 		return;
 	}
 
-	float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-
-	m_deviceCtx->ClearRenderTargetView(m_targetView, clearColor);
-
-	m_deviceCtx->ClearDepthStencilView(m_depthStencilView, 0, 0.0f, 0);
-
 	m_swapChain->Present(0, 0);
 }
 
 void GraphicsDX11::Update()
 {
+	if (!m_swapChain || !m_deviceCtx)
+	{
+		return;
+	}
+
+	float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+
+	m_deviceCtx->ClearRenderTargetView(m_targetView, clearColor);
+
+	m_deviceCtx->ClearDepthStencilView(m_depthStencilView, 0, 0.0f, 0);
 }
