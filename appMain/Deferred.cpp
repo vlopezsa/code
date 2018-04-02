@@ -1,9 +1,18 @@
 #include "Deferred.h"
 
-const std::string Deferred::skDefaultModel = "Arcade/Arcade.fbx";
-
 Deferred::~Deferred()
 {
+}
+
+void Deferred::reset()
+{
+	mpRenderer.reset();
+	mpScene.reset();
+	mpModel.reset();
+
+	mpRenderer = nullptr;
+	mpScene = nullptr;
+	mpModel = nullptr;
 }
 
 CameraController& Deferred::getActiveCameraController()
@@ -11,14 +20,17 @@ CameraController& Deferred::getActiveCameraController()
 	return mFirstPersonCameraController;
 }
 
-void Deferred::loadModelFromFile(const std::string& filename, Fbo* pTargetFbo)
+void Deferred::loadModelFromFile(const std::string& filename)
 {
+	Mesh::resetGlobalIdCounter();
+	reset();
+
 	Model::LoadFlags flags = Model::LoadFlags::None;
 	if (mGenerateTangentSpace == false)
 	{
 		flags |= Model::LoadFlags::DontGenerateTangentSpace;
 	}
-	auto fboFormat = pTargetFbo->getColorTexture(0)->getFormat();
+	auto fboFormat = mpDefaultFBO->getColorTexture(0)->getFormat();
 	flags |= isSrgbFormat(fboFormat) ? Model::LoadFlags::None : Model::LoadFlags::AssumeLinearSpaceTextures;
 
 	mpModel = Model::createFromFile(filename.c_str(), flags);
@@ -28,30 +40,91 @@ void Deferred::loadModelFromFile(const std::string& filename, Fbo* pTargetFbo)
 		msgBox("Could not load model");
 		return;
 	}
-	resetCamera();
+	
+	mpScene = Scene::create();
+
+	mpScene->addModelInstance(mpModel, "instance");
+
+	initScene();
 }
 
-void Deferred::loadModel(Fbo* pTargetFbo)
+void Deferred::loadModel()
 {
 	std::string filename;
 	if (openFileDialog("Supported Formats\0*.obj;*.bin;*.dae;*.x;*.md5mesh\0\0", filename))
 	{
-		loadModelFromFile(filename, pTargetFbo);
+		loadModelFromFile(filename);
 	}
 }
 
-void Deferred::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
+
+void Deferred::loadScene()
 {
-	// Load model group
-	if (pGui->addButton("Load Model"))
+	std::string filename;
+	if (openFileDialog(Scene::kFileFormatString, filename))
 	{
-		loadModel(pSample->getCurrentFbo().get());
+		reset();
+
+		mpScene = Scene::loadFromFile(filename);
+
+		initScene();
+	}
+}
+
+void Deferred::initScene()
+{
+	if (mpScene->getCameraCount() == 0)
+	{
+		// Place the camera above the center, looking slightly downwards
+		const Model* pModel = mpScene->getModel(0).get();
+
+		vec3 position = pModel->getCenter();	
+		float radius = pModel->getRadius();
+		position.y += 0.1f * radius;
+		mpScene->setCameraSpeed(radius * 0.03f);
+
+		mpCamera->setPosition(position);
+		mpCamera->setTarget(position + vec3(0, -0.3f, -radius));
+		mpCamera->setDepthRange(0.1f, radius * 10);
+
+		mpScene->addCamera(mpCamera);
 	}
 
-	if (pGui->beginGroup("Load Options"))
+	if (mpScene->getLightCount() == 0)
 	{
-		pGui->addCheckBox("Generate Tangent Space", mGenerateTangentSpace);
-		pGui->endGroup();
+		// Create a directional light
+		DirectionalLight::SharedPtr pDirLight = DirectionalLight::create();
+		pDirLight->setWorldDirection(vec3(-0.189f, -0.861f, -0.471f));
+		pDirLight->setIntensity(vec3(1, 1, 0.985f) * 10.0f);
+		pDirLight->setName("DirLight");
+		mpScene->addLight(pDirLight);
+		mpScene->setAmbientIntensity(vec3(0.1f));
+	}
+
+	mpRenderer = SceneRenderer::create(mpScene);
+
+	mpRenderer->setCameraControllerType(SceneRenderer::CameraControllerType::FirstPerson);
+
+	mCurrentTime = 0;
+}
+
+void Deferred::onGuiRender()
+{
+	// Load model group
+	if (mpGui->addButton("Load Model"))
+	{
+		loadModel();
+	}
+
+	if (mpGui->addButton("Load Scene"))
+	{
+		loadScene();
+	}
+
+	if (mpGui->beginGroup("Load Options"))
+	{
+		mpGui->addCheckBox("Generate Tangent Space", mGenerateTangentSpace);
+		mpGui->endGroup();
 	}
 
 	Gui::DropdownList debugModeList;
@@ -60,32 +133,26 @@ void Deferred::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
 	debugModeList.push_back({ 2, "Normals" });
 	debugModeList.push_back({ 3, "Albedo" });
 	debugModeList.push_back({ 4, "Illumination" });
-	pGui->addDropdown("Debug mode", debugModeList, (uint32_t&)mDebugMode);
+	mpGui->addDropdown("Debug mode", debugModeList, (uint32_t&)mDebugMode);
 
-	Gui::DropdownList cullList;
-	cullList.push_back({ 0, "No Culling" });
-	cullList.push_back({ 1, "Backface Culling" });
-	cullList.push_back({ 2, "Frontface Culling" });
-	pGui->addDropdown("Cull Mode", cullList, (uint32_t&)mCullMode);
-
-	if (pGui->beginGroup("Lights"))
+	if (mpGui->beginGroup("Lights"))
 	{
-		pGui->addRgbColor("Ambient intensity", mAmbientIntensity);
-		if (pGui->beginGroup("Directional Light"))
+		mpGui->addRgbColor("Ambient intensity", mAmbientIntensity);
+		if (mpGui->beginGroup("Directional Light"))
 		{
-			mpDirLight->renderUI(pGui);
-			pGui->endGroup();
+			mpDirLight->renderUI(mpGui.get());
+			mpGui->endGroup();
 		}
-		pGui->endGroup();
+		mpGui->endGroup();
 	}
 
 	if (mpModel)
 	{
-		renderModelUiElements(pGui);
+		renderModelUiElements();
 	}
 }
 
-void Deferred::renderModelUiElements(Gui* pGui)
+void Deferred::renderModelUiElements()
 {
 	bool bAnim = mpModel->hasAnimations();
 	static const char* animateStr = "Animate";
@@ -95,7 +162,7 @@ void Deferred::renderModelUiElements(Gui* pGui)
 	{
 		mActiveAnimationID = sBindPoseAnimationID;
 
-		pGui->addCheckBox(animateStr, mAnimate);
+		mpGui->addCheckBox(animateStr, mAnimate);
 		Gui::DropdownList list;
 		list.resize(mpModel->getAnimationsCount() + 1);
 		list[0].label = "Bind Pose";
@@ -110,21 +177,21 @@ void Deferred::renderModelUiElements(Gui* pGui)
 				list[i + 1].label = std::to_string(i);
 			}
 		}
-		if (pGui->addDropdown(activeAnimStr, list, mActiveAnimationID))
+		if (mpGui->addDropdown(activeAnimStr, list, mActiveAnimationID))
 		{
 			mpModel->setActiveAnimation(mActiveAnimationID);
 		}
 	}
-	if (pGui->beginGroup("Depth Range"))
+	if (mpGui->beginGroup("Depth Range"))
 	{
 		const float minDepth = mpModel->getRadius() * 1 / 1000;
-		pGui->addFloatVar("Near Plane", mNearZ, minDepth, mpModel->getRadius() * 15, minDepth * 5);
-		pGui->addFloatVar("Far Plane", mFarZ, minDepth, mpModel->getRadius() * 15, minDepth * 5);
-		pGui->endGroup();
+		mpGui->addFloatVar("Near Plane", mNearZ, minDepth, mpModel->getRadius() * 15, minDepth * 5);
+		mpGui->addFloatVar("Far Plane", mFarZ, minDepth, mpModel->getRadius() * 15, minDepth * 5);
+		mpGui->endGroup();
 	}
 }
 
-void Deferred::onLoad(SampleCallbacks* pSample, RenderContext::SharedPtr pRenderContext)
+void Deferred::onLoad()
 {
 	mpCamera = Camera::create();
 
@@ -134,11 +201,8 @@ void Deferred::onLoad(SampleCallbacks* pSample, RenderContext::SharedPtr pRender
 
 	// create rasterizer state
 	RasterizerState::Desc rsDesc;
-	mpCullRastState[0] = RasterizerState::create(rsDesc);
 	rsDesc.setCullMode(RasterizerState::CullMode::Back);
-	mpCullRastState[1] = RasterizerState::create(rsDesc);
-	rsDesc.setCullMode(RasterizerState::CullMode::Front);
-	mpCullRastState[2] = RasterizerState::create(rsDesc);
+	mpCullRastState = RasterizerState::create(rsDesc);
 
 	// Depth test
 	DepthStencilState::Desc dsDesc;
@@ -163,58 +227,60 @@ void Deferred::onLoad(SampleCallbacks* pSample, RenderContext::SharedPtr pRender
 	mpDeferredVars = GraphicsVars::create(mpDeferredPassProgram->getActiveVersion()->getReflector());
 	mpLightingVars = GraphicsVars::create(mpLightingPass->getProgram()->getActiveVersion()->getReflector());
 
-	// Load default model
-	loadModelFromFile(skDefaultModel, pSample->getCurrentFbo().get());
+	initializeTesting();
 }
 
-void Deferred::onFrameRender(SampleCallbacks* pSample, RenderContext::SharedPtr pRenderContext, Fbo::SharedPtr pTargetFbo)
+void Deferred::onFrameRender()
 {
-	GraphicsState* pState = pRenderContext->getGraphicsState().get();
+	beginTestFrame();
+
+	GraphicsState* pState = mpRenderContext->getGraphicsState().get();
 
 	const glm::vec4 clearColor(0.38f, 0.52f, 0.10f, 1);
 
 	// G-Buffer pass
-	if (mpModel)
+	if (mpScene)
 	{
-		pRenderContext->clearFbo(mpGBufferFbo.get(), glm::vec4(0), 1.0f, 0, FboAttachmentType::Color | FboAttachmentType::Depth);
+		mpRenderContext->clearFbo(mpGBufferFbo.get(), glm::vec4(0), 1.0f, 0, FboAttachmentType::Color | FboAttachmentType::Depth);
+		
 		pState->setFbo(mpGBufferFbo);
 
-		mpCamera->setDepthRange(mNearZ, mFarZ);
-		CameraController& ActiveController = getActiveCameraController();
-		ActiveController.update();
+		mpRenderer->update(mCurrentTime);
 
 		// Animate
 		if (mAnimate)
 		{
 			PROFILE(Animate);
-			mpModel->animate(pSample->getCurrentTime());
+			mpModel->animate(mCurrentTime);
 		}
 
 		// Set render state
-		pState->setRasterizerState(mpCullRastState[mCullMode]);
+		pState->setRasterizerState(mpCullRastState);
 		pState->setDepthStencilState(mpDepthTestDS);
 
 		// Render model
-		mpModel->bindSamplerToMaterials(mpLinearSampler);
-		pRenderContext->setGraphicsVars(mpDeferredVars);
+		mpScene->bindSamplerToMaterials(mpLinearSampler);
+		mpRenderContext->setGraphicsVars(mpDeferredVars);
 		pState->setProgram(mpDeferredPassProgram);
-		ModelRenderer::render(pRenderContext.get(), mpModel, mpCamera.get());
+	
+		mpRenderer->renderScene(mpRenderContext.get());
 	}
 
 	// Lighting pass (fullscreen quad)
 	{
-		pState->setFbo(pTargetFbo);
-		pRenderContext->clearFbo(pTargetFbo.get(), clearColor, 1.0f, 0, FboAttachmentType::Color);
+		pState->setFbo(mpDefaultFBO);
+		mpRenderContext->clearFbo(mpDefaultFBO.get(), clearColor, 1.0f, 0, FboAttachmentType::Color);
 
 		// Reset render state
-		pState->setRasterizerState(mpCullRastState[0]);
+		pState->setRasterizerState(mpCullRastState);
 		pState->setBlendState(mpOpaqueBS);
 		pState->setDepthStencilState(mpNoDepthDS);
 
 		// Set lighting params
 		ConstantBuffer::SharedPtr pLightCB = mpLightingVars["PerImageCB"];
 		pLightCB["gAmbient"] = mAmbientIntensity;
-		mpDirLight->setIntoProgramVars(mpLightingVars.get(), pLightCB.get(), "gDirLight");
+		mpDirLight->setIntoConstantBuffer(pLightCB.get(), "gDirLight");
+
 		// Debug mode
 		pLightCB->setVariable("gDebugMode", (uint32_t)mDebugMode);
 
@@ -225,43 +291,33 @@ void Deferred::onFrameRender(SampleCallbacks* pSample, RenderContext::SharedPtr 
 
 
 		// Kick it off
-		pRenderContext->setGraphicsVars(mpLightingVars);
-		mpLightingPass->execute(pRenderContext.get());
+		mpRenderContext->setGraphicsVars(mpLightingVars);
+		mpLightingPass->execute(mpRenderContext.get());
 	}
+
+	endTestFrame();
 }
 
-void Deferred::onShutdown(SampleCallbacks* pSample)
+void Deferred::onShutdown()
 {
-	mpModel.reset();
+	reset();
 }
 
-bool Deferred::onKeyEvent(SampleCallbacks* pSample, const KeyboardEvent& keyEvent)
+bool Deferred::onKeyEvent(const KeyboardEvent& keyEvent)
 {
-	bool bHandled = getActiveCameraController().onKeyEvent(keyEvent);
-	if (bHandled == false)
-	{
-		if (keyEvent.type == KeyboardEvent::Type::KeyPressed)
-		{
-			switch (keyEvent.key)
-			{
-			case KeyboardEvent::Key::R:
-				resetCamera();
-				break;
-			default:
-				bHandled = false;
-			}
-		}
-	}
-	return bHandled;
+	return mpRenderer ? mpRenderer->onKeyEvent(keyEvent) : false;
 }
 
-bool Deferred::onMouseEvent(SampleCallbacks* pSample, const MouseEvent& mouseEvent)
+bool Deferred::onMouseEvent(const MouseEvent& mouseEvent)
 {
-	return getActiveCameraController().onMouseEvent(mouseEvent);
+	return mpRenderer ? mpRenderer->onMouseEvent(mouseEvent) : true;
 }
 
-void Deferred::onResizeSwapChain(SampleCallbacks* pSample, uint32_t width, uint32_t height)
+void Deferred::onResizeSwapChain()
 {
+	uint32_t width = mpDefaultFBO->getWidth();
+	uint32_t height = mpDefaultFBO->getHeight();
+
 	mpCamera->setFocalLength(21.0f);
 	mAspectRatio = (float(width) / float(height));
 	mpCamera->setAspectRatio(mAspectRatio);
@@ -272,31 +328,9 @@ void Deferred::onResizeSwapChain(SampleCallbacks* pSample, uint32_t width, uint3
 	mpGBufferFbo = FboHelper::create2D(width, height, fboDesc);
 }
 
-void Deferred::resetCamera()
+void Deferred::onInitializeTesting()
 {
-	if (mpModel)
-	{
-		// update the camera position
-		float radius = mpModel->getRadius();
-		const glm::vec3& modelCenter = mpModel->getCenter();
-		glm::vec3 camPos = modelCenter;
-		camPos.z += radius * 4;
-
-		mpCamera->setPosition(camPos);
-		mpCamera->setTarget(modelCenter);
-		mpCamera->setUpVector(glm::vec3(0, 1, 0));
-
-		// Update the controllers
-		mFirstPersonCameraController.setCameraSpeed(radius*0.25f);
-		mNearZ = std::max(0.1f, mpModel->getRadius() / 750.0f);
-		mFarZ = radius * 10;
-	}
-}
-
-void Deferred::onInitializeTesting(SampleCallbacks* pSample)
-{
-	auto argList = pSample->getArgList();
-	std::vector<ArgList::Arg> modeFrames = argList.getValues("incrementDebugMode");
+	std::vector<ArgList::Arg> modeFrames = mArgList.getValues("incrementDebugMode");
 	if (!modeFrames.empty())
 	{
 		mChangeModeFrames.resize(modeFrames.size());
@@ -309,35 +343,13 @@ void Deferred::onInitializeTesting(SampleCallbacks* pSample)
 	mChangeModeIt = mChangeModeFrames.begin();
 }
 
-void Deferred::onEndTestFrame(SampleCallbacks* pSample, SampleTest* pSampleTest)
+void Deferred::onEndTestFrame()
 {
-	uint32_t frameId = pSample->getFrameID();
+	uint32_t frameId = frameRate().getFrameCount();
 	if (mChangeModeIt != mChangeModeFrames.end() && frameId >= *mChangeModeIt)
 	{
 		++mChangeModeIt;
 		uint32_t* pMode = (uint32_t*)&mDebugMode;
 		*pMode = min(*pMode + 1, (uint32_t)ShowLighting);
 	}
-}
-
-#ifdef _WIN32
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
-#else
-int main(int argc, char** argv)
-#endif
-{
-	Deferred::UniquePtr pRenderer = std::make_unique<Deferred>();
-	SampleConfig config;
-	config.windowDesc.width = 1280;
-	config.windowDesc.height = 720;
-	config.windowDesc.resizableWindow = true;
-	config.windowDesc.title = "Simple Deferred";
-#ifdef _WIN32
-	Sample::run(config, pRenderer);
-#else
-	config.argc = (uint32_t)argc;
-	config.argv = argv;
-	Sample::run(config, pRenderer);
-#endif
-	return 0;
 }

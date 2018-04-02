@@ -38,7 +38,7 @@
 #define vec4 float4
 #endif
 
-vec3 shade(vec3 posW, vec3 normalW, float linearRoughness, vec4 albedo)
+vec3 shade(vec3 posW, vec3 normalW, vec4 albedo)
 {
     // Discard empty pixels
     if (albedo.a <= 0)
@@ -46,33 +46,38 @@ vec3 shade(vec3 posW, vec3 normalW, float linearRoughness, vec4 albedo)
         discard;
     }
 
-    /* Reconstruct the hit-point */
-    ShadingData sd = initShadingData();
-    sd.posW = posW;
-    sd.V = normalize(gCamera.posW - posW);
-    sd.N = normalW;
-    sd.NdotV = abs(dot(sd.V, sd.N));
-    sd.linearRoughness = linearRoughness;
+    /* Reconstruct shading attributes */
+    ShadingAttribs shAttr;
+    shAttr.P = posW;
+    shAttr.E = normalize(gCam.position - posW);
+    shAttr.N = normalW;
 
     /* Reconstruct layers (one diffuse layer) */
-    sd.diffuse = albedo.rgb;
-    sd.opacity = 0;
+    initDiffuseLayer(shAttr.preparedMat.desc.layers[0], shAttr.preparedMat.values.layers[0], albedo.rgb);
+    initNullLayer(shAttr.preparedMat.desc.layers[1]);
 
     /* Do lighting */
-    ShadingResult dirResult = evalMaterial(sd, gDirLight, 1);
+    ShadingOutput result;
+    // Directional light
+    evalMaterial(shAttr, gDirLight, result, true);
+    // Point light
+    evalMaterial(shAttr, gPointLight, result, false);
+    // Add ambient term
+    result.finalValue += gAmbient * result.diffuseAlbedo;
+    result.diffuseIllumination += gAmbient;
 
-    float3 result;
     // Debug vis
-    if (gDebugMode == ShowPos)
-        result = posW;
-    else if (gDebugMode == ShowNormals)
-        result = 0.5 * normalW + 0.5f;
-    else if (gDebugMode == ShowAlbedo)
-        result = albedo.rgb;
-    else if (gDebugMode == ShowLighting)
-        result = dirResult.diffuseBrdf / sd.diffuse.rgb;
-    else
-        result = dirResult.diffuse;
+    if (gDebugMode != 0)
+    {
+        if (gDebugMode == ShowPos)
+            result.finalValue = posW;
+        else if (gDebugMode == ShowNormals)
+            result.finalValue = 0.5 * normalW + 0.5f;
+        else if (gDebugMode == ShowAlbedo)
+            result.finalValue = albedo.rgb;
+        else
+            result.finalValue = result.diffuseIllumination;
+    }
 
-    return result;
+    return result.finalValue;
 }

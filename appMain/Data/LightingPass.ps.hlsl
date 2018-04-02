@@ -32,10 +32,11 @@ cbuffer PerImageCB
 {
     // G-Buffer
     // Lighting params
-    LightData gDirLight;
-    float3 gAmbient;
+	LightData gDirLight;
+	LightData gPointLight;
+	float3 gAmbient;
     // Debug mode
-    uint gDebugMode;
+	uint gDebugMode;
 };
 
 #include "LightingPassCommon.h"
@@ -47,13 +48,11 @@ Texture2D gGBuf2;
 float4 main(float2 texC : TEXCOORD, float4 pos : SV_POSITION) : SV_TARGET
 {
     // Fetch a G-Buffer
-    float3 posW    = gGBuf0.Load(int3(pos.xy, 0)).rgb;
-    float4 buf1Val = gGBuf1.Load(int3(pos.xy, 0));
-    float3 normalW = buf1Val.rgb;
-    float linearRoughness = buf1Val.a;
-    float4 albedo  = gGBuf2.Load(int3(pos.xy, 0));
+    const float3 posW    = gGBuf0.Load(int3(pos.xy, 0)).rgb;
+    const float3 normalW = gGBuf1.Load(int3(pos.xy, 0)).rgb;
+    const float4 albedo  = gGBuf2.Load(int3(pos.xy, 0));
 
-    float3 color = shade(posW, normalW, linearRoughness, albedo);
+    float3 color = shade(posW, normalW, albedo);
 
-    return float4(color, 1);
+	return float4(color, 1);
 }

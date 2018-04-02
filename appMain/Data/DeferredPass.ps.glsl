@@ -30,17 +30,23 @@ __import ShaderCommon;
 
 __import Shading;
 
-layout(location = 0) out vec4 fragColor0;
-layout(location = 1) out vec4 fragColor1;
-layout(location = 2) out vec4 fragColor2;
+layout(location = 0) out float4 fragColor0;
+layout(location = 1) out float4 fragColor1;
+layout(location = 2) out float4 fragColor2;
 
-layout(location = 0) in VertexOut vOut;
+layout(location = 0) in vec3 normalW;
+layout(location = 1) in vec3 bitangentW;
+layout(location = 2) in vec2 texC;
+layout(location = 3) in vec3 posW;
+layout(location = 4) in vec3 colorV;
+layout(location = 5) in vec4 prevPosH;
 
 void main()
 {
-    ShadingData sd = prepareShadingData(vOut, gMaterial, gCamera.posW);
+    ShadingAttribs shAttr;
+    prepareShadingAttribs(gMaterial, posW, gCam.position, normalW, texC, shAttr);
 
-    fragColor0 = vec4(sd.posW, 1);
-    fragColor1 = vec4(sd.N, sd.linearRoughness);
-    fragColor2 = vec4(sd.diffuse, sd.opacity);
+    fragColor0 = float4(shAttr.P, 1);
+    fragColor1 = float4(shAttr.N, 1);
+    fragColor2 = shAttr.preparedMat.values.layers[0].albedo;
 }

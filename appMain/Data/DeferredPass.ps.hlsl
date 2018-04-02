@@ -30,22 +30,23 @@ __import ShaderCommon;
 
 __import Shading;
 
-struct PsOut
+struct PS_OUT
 {
     float4 fragColor0 : SV_TARGET0;
     float4 fragColor1 : SV_TARGET1;
-    float4 fragColor2 : SV_TARGET2;
+    float4 fragColor2 : SV_TARGET2;    
 };
 
 
-PsOut main(VertexOut vOut)
+PS_OUT main(VS_OUT vOut)
 {
-    ShadingData sd = prepareShadingData(vOut, gMaterial, gCamera.posW);
+    ShadingAttribs shAttr;
+    prepareShadingAttribs(gMaterial, vOut.posW, gCam.position, vOut.normalW, vOut.texC, shAttr);
 
-    PsOut psOut;
-    psOut.fragColor0 = float4(sd.posW, 1);
-    psOut.fragColor1 = float4(sd.N, sd.linearRoughness);
-    psOut.fragColor2 = float4(sd.diffuse, sd.opacity);
+    PS_OUT psOut;
+    psOut.fragColor0 = float4(shAttr.P, 1);
+    psOut.fragColor1 = float4(shAttr.N, 1);
+    psOut.fragColor2 = shAttr.preparedMat.values.layers[0].albedo;
 
     return psOut;
 }
