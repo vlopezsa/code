@@ -1,11 +1,12 @@
 #ifndef Object_h_
 #define Object_h_
 
+#include "Falcor.h"
+
 #include "IntersectionInfo.h"
 #include "Ray.h"
 #include "BBox.h"
 
-#include "vector4.h"
 
 class Object {
 public:
@@ -19,13 +20,13 @@ public:
     const = 0;
 
     //! Return an object normal based on an intersection
-    virtual Vector4 getNormal(const IntersectionInfo& I) const = 0;
+    virtual vec4 getNormal(const IntersectionInfo& I) const = 0;
 
     //! Return a bounding box for this object
     virtual BBox getBBox() const = 0;
 
     //! Return the centroid for this object. (Used in BVH Sorting)
-    virtual Vector4 getCentroid() const = 0;
+    virtual vec4 getCentroid() const = 0;
 };
 
 #endif

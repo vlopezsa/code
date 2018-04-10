@@ -1,32 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Core">
-      <UniqueIdentifier>{dbb10dfd-e23d-4767-9a7c-95af5ab58db9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Sampler">
       <UniqueIdentifier>{95edd39e-4ef8-46a0-b70e-858ac6508eb8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Image">
-      <UniqueIdentifier>{be207594-4d2c-4ad3-8410-ffca6833a0e0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Math">
-      <UniqueIdentifier>{7de316a9-8901-4369-a42b-aa4093f92fb2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SH">
       <UniqueIdentifier>{e42039e7-b5d0-43a5-8d64-3af65cb37c20}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="OS Util">
-      <UniqueIdentifier>{c50fffe3-9315-4603-ab93-1ae575c2fe78}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene">
-      <UniqueIdentifier>{52c3047f-1129-4d28-9ae1-c8c6dbbd6498}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Camera">
-      <UniqueIdentifier>{36af5edf-450f-4153-b299-78489244c92e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Render">
-      <UniqueIdentifier>{48e5a9e8-d1ea-4c1d-95e5-e215cf4d4291}</UniqueIdentifier>
     </Filter>
     <Filter Include="BVH">
       <UniqueIdentifier>{bcbf03c5-287d-48d6-80b9-9d99529fe5ca}</UniqueIdentifier>
@@ -54,35 +33,14 @@
     <ClInclude Include="include\BVH.h">
       <Filter>BVH</Filter>
     </ClInclude>
-    <ClInclude Include="include\graphics.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="include\image.h">
-      <Filter>Image</Filter>
-    </ClInclude>
-    <ClInclude Include="include\material.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
     <ClInclude Include="include\montecarlo.h">
       <Filter>Sampler</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mesh.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="include\quaternion.h">
-      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="include\rectsampler.h">
       <Filter>Sampler</Filter>
     </ClInclude>
-    <ClInclude Include="include\render.h">
-      <Filter>Render</Filter>
-    </ClInclude>
     <ClInclude Include="include\sampler.h">
       <Filter>Sampler</Filter>
-    </ClInclude>
-    <ClInclude Include="include\scene.h">
-      <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="include\shgeomerics.h">
       <Filter>SH</Filter>
@@ -93,50 +51,14 @@
     <ClInclude Include="include\sphericalharmonic.h">
       <Filter>SH</Filter>
     </ClInclude>
-    <ClInclude Include="include\texturemgr.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="include\thirdparty.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vector2.h">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vector3.h">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vector4.h">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="include\triangleobj.h">
       <Filter>BVH</Filter>
-    </ClInclude>
-    <ClInclude Include="include\camera.h">
-      <Filter>Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="include\osutil.h">
-      <Filter>OS Util</Filter>
-    </ClInclude>
-    <ClInclude Include="include\light.h">
-      <Filter>Light</Filter>
     </ClInclude>
     <ClInclude Include="include\prt.h">
       <Filter>Light</Filter>
     </ClInclude>
-    <ClInclude Include="EnvironmentCubeMap.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="environmentmap.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="environmentprobe.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="thirdparty.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="montecarlo.cpp">
       <Filter>Sampler</Filter>
     </ClCompile>
@@ -146,47 +68,14 @@
     <ClCompile Include="sampler.cpp">
       <Filter>Sampler</Filter>
     </ClCompile>
-    <ClCompile Include="image.cpp">
-      <Filter>Image</Filter>
-    </ClCompile>
-    <ClCompile Include="vector3.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
-    <ClCompile Include="vector2.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
     <ClCompile Include="sphericalharmonic.cpp">
       <Filter>SH</Filter>
-    </ClCompile>
-    <ClCompile Include="osutil.cpp">
-      <Filter>OS Util</Filter>
-    </ClCompile>
-    <ClCompile Include="scene.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="mesh.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="camera.cpp">
-      <Filter>Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="quaternion.cpp">
-      <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="shstandard.cpp">
       <Filter>SH</Filter>
     </ClCompile>
     <ClCompile Include="shgeomerics.cpp">
       <Filter>SH</Filter>
-    </ClCompile>
-    <ClCompile Include="material.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="texturemgr.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="render.cpp">
-      <Filter>Render</Filter>
     </ClCompile>
     <ClCompile Include="BVH\BBox.cpp">
       <Filter>BVH</Filter>
@@ -197,17 +86,8 @@
     <ClCompile Include="BVH\triangleobj.cpp">
       <Filter>BVH</Filter>
     </ClCompile>
-    <ClCompile Include="light.cpp">
-      <Filter>Light</Filter>
-    </ClCompile>
     <ClCompile Include="prt.cpp">
       <Filter>Light</Filter>
-    </ClCompile>
-    <ClCompile Include="EnvironmentCubeMap.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="environmentprobe.cpp">
-      <Filter>Scene</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

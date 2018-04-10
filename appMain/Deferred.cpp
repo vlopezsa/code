@@ -199,11 +199,6 @@ void Deferred::onLoad()
 
 	mpLightingPass = FullScreenPass::create(appendShaderExtension("LightingPass.ps"));
 
-	// create rasterizer state
-	RasterizerState::Desc rsDesc;
-	rsDesc.setCullMode(RasterizerState::CullMode::Back);
-	mpCullRastState = RasterizerState::create(rsDesc);
-
 	// Depth test
 	DepthStencilState::Desc dsDesc;
 	dsDesc.setDepthTest(false);
