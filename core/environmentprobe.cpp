@@ -97,9 +97,9 @@ bool EnvironmentProbe::setLightProbe(TextureManager *extTexMgr, char *file)
 
     uint32_t tidx = extTexMgr->addTextureFromFile(file);
 
-    material[0].Color.diffuse = Vector3();
+    material[0].Color.diffuse = Vector3(1.0f);
 
-    if (tidx != TEXTURE_INVALID)
+    //if (tidx != TEXTURE_INVALID)
         material[0].texIdx.diffuse.push_back(tidx);
 
     mesh[0].materialIdx = 0;
@@ -116,12 +116,18 @@ Vector3 EnvironmentProbe::getSampleColor(Vector3 dir)
 
 Vector3 EnvironmentProbe::getSampleDir(const Vector3 &cartDir)
 {
+	if (mesh[0].materialIdx >= material.size())
+		return m_DefaultColor;
+
     Vector3 color;
     Vector2 uv = getUVCoord(cartDir);
 
     Material *mat = &material[mesh[0].materialIdx];
 
-    color = texMgr->sampleTextureImage(mat->texIdx.diffuse[0], uv);
+	if (mat->texIdx.diffuse[0] != TEXTURE_INVALID)
+		color = texMgr->sampleTextureImage(mat->texIdx.diffuse[0], uv);
+	else
+		color = mat->Color.diffuse;
 
     return color;
 }

@@ -275,11 +275,11 @@ void _partialRayTrace(uint8_t *outBuf,
 
     std::vector<Vector2> offList;
 
-    //offList.push_back(Vector2(0.5, 0.5));
-    offList.push_back(Vector2(0.25, 0.25));
+    offList.push_back(Vector2(0.5, 0.5));
+    /*offList.push_back(Vector2(0.25, 0.25));
     offList.push_back(Vector2(0.75, 0.5));
     offList.push_back(Vector2(0.25, 0.75));
-    offList.push_back(Vector2(0.75, 0.75));
+    offList.push_back(Vector2(0.75, 0.75));*/
 
     for (size_t j = startY; j<endY && j<Height; j++) {
         size_t index = j * pitch;
@@ -294,7 +294,7 @@ void _partialRayTrace(uint8_t *outBuf,
                     Position, camera_u, camera_v, camera_dir,
                     i, j, Width, Height,
                     40.0f, offList[oi].x, offList[oi].y);
-                outColor += getRadiance(ray, &light, false, 1);
+                outColor += getRadiance(ray, &light, false, 0);
                 //outColor += getRadiance(ray, NULL, true, 0);
             }
 

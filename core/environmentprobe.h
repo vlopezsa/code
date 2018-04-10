@@ -12,6 +12,8 @@ private:
 
     void  createSphere(uint32_t divisions);
 
+	Vector3 m_DefaultColor;
+
 public:
     EnvironmentProbe();
     EnvironmentProbe(uint32_t numDivisions);

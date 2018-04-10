@@ -18,8 +18,10 @@ public:
 
     TextureManager       *texMgr;
 
+	Vector3				  m_DefaultColor;
+
 public:
-    EnvironmentMap() { texMgr = NULL; }
+	EnvironmentMap() { texMgr = NULL; m_DefaultColor = Vector3(1.0f); }
     ~EnvironmentMap()
     {
         mesh.clear();
