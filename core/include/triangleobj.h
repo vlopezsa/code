@@ -1,21 +1,22 @@
 #pragma once
 
-#include "Falcor.h"
-
 #include "Object.h"
+#include "mesh.h"
 
 class TriangleObj :
     public Object
 {
 private:
-    vec4 centroid;
+    const Mesh *mesh;
+
+    Vector4 centroid;
     BBox    bbox;
 
     void calculateCentroid();
     void calculateBBox();
 
 public:
-    TriangleObj(const void *m, uint32_t meshId, uint32_t triId);
+    TriangleObj(const Mesh *m, uint32_t meshId, uint32_t triId);
     ~TriangleObj();
 
     uint32_t meshId;
@@ -27,11 +28,11 @@ public:
         IntersectionInfo* intersection) const;
 
     //! Return an object normal based on an intersection
-    vec4 getNormal(const IntersectionInfo& I) const;
+    Vector4 getNormal(const IntersectionInfo& I) const;
 
     //! Return a bounding box for this object
     BBox getBBox() const;
 
     //! Return the centroid for this object. (Used in BVH Sorting)
-    vec4 getCentroid() const;
+    Vector4 getCentroid() const;
 };

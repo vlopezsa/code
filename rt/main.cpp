@@ -1,4 +1,8 @@
 #include <iostream>
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include <GL/glut.h>
 #include <AntTweakBar.h>
@@ -12,6 +16,9 @@
 #include "osutil.h"
 #include "scene.h"
 #include "thirdparty.h"
+#include "montecarlo.h"
+
+using namespace std;
 
 /* Window related variables */
 char *g_strAppTitle = "Ray Tracer";
@@ -38,83 +45,544 @@ float g_rayPercentage = 10.0;
 
 #include "triangleobj.h"
 
+enum OPT_OPTIONS 
+{
+	OPT_DIFFUSE_ONLY,
+	OPT_SHADOWS_ONLY,
+	OPT_FULL_PATHTRACER
+};
+
+typedef struct {
+	uint32_t m_Width;
+	uint32_t m_Height;
+
+	struct Camera {
+		Vector3 m_Position;
+
+		Vector3 m_LookAt;
+
+		Vector3 m_Up;
+
+		float m_Fovy;
+
+		std::vector<Vector2> m_Offsets;
+	} m_Camera;
+
+	struct Light
+	{
+		Vector3 m_Position;
+		float   m_Radius;
+		float   m_Intensity;
+	} m_Light;
+
+	uint32_t m_Operation;
+
+	std::string m_InputFile;
+	std::string m_OutputFile;
+
+	uint8_t m_Interactive;
+	uint8_t m_Verbosity;
+}Config;
+
 typedef struct {
     Vector3 o;
     Vector3 e;
     bool hit;
 }Line;
 
+Config g_Config = { 0 };
+
+Sampler *g_Sampler = new MonteCarlo(32 * 32);
+
 std::vector<Line> lines;
 
-void rayTrace()
+float toRadians(float deg)
 {
-    if (g_Scene.bvh == NULL)
-        return;
+	return (M_PI * deg) / 180.f;
+}
 
-    Image *img = g_SceneRT.texture.getTextureImage(0U);
-    uint8_t *out = img->getData();
+Vector3 toCartesian(Vector2 &spherical)
+{
+	Vector3 cartesian;
 
-    glPushMatrix();
-    g_Camera->SetPerspective();
-    glPopMatrix();
+	cartesian.x = (float)(sin(spherical.theta) * cos(spherical.phi));
+	cartesian.y = (float)(sin(spherical.theta) * sin(spherical.phi));
+	cartesian.z = (float)(cos(spherical.theta));
 
-    Vector3 lookAt(0, 0, 0);
-    Vector3 Up(0, 1, 0);
-    Vector3 Position(0.001, 25, 0.001);
+	return cartesian;
+}
 
-    Vector3 camera_dir = lookAt - Position;
-    camera_dir.normalize();
+inline Ray RTCCreateCameraRay(
+	Vector3 &Position,
+	Vector3 &camera_u, Vector3 &camera_v,
+	Vector3 &camera_dir,
+	uint32_t x, uint32_t y,
+	uint32_t Width, uint32_t Height,
+	float fov, float offX, float offY)
+{
+	float u = ((float)x + offX) / (float)(Width - 1) - 0.5f;
+	float v = ((float)(Height - 1 - y) + offY) / (float)(Height - 1) - 0.5f;
+	
+	// This is only valid for square aspect ratio images
+	Vector3 rayDir = camera_u * u + camera_v * v + camera_dir * fov;
+	rayDir.normalize();
+	Ray ray(Position, rayDir);
 
-    // Camera tangent space
-    Vector3 camera_u = cross(camera_dir, Up);
-    camera_u.normalize();
+	return ray;
+}
 
-    Vector3 camera_v = cross(camera_u, camera_dir);
-    camera_v.normalize();
+float RTCGetOcclusion1(Ray &ray, Sampler *sampler)
+{
+	float occlusion = 0.0f;
 
-    lines.clear();
-    lines.resize(img->Height * img->Width);
+	IntersectionInfo I = {0};
 
-    uint32_t cnt = 0;
+	bool hit = g_Scene.bvh->getIntersection(ray, &I, false);
 
-    for (size_t j = 0; j<img->Height; j++) {
-        size_t index = j * img->Pitch;
+	if (!hit)
+		return 0.0f;
 
+	TriangleObj *tr = (TriangleObj *)I.object;
 
-        for (size_t i = 0; i<img->Width; i++, index += 3) {
-            float u = ((float)i + .5f) / (float)(img->Width - 1) - .5f;
-            float v = ((float)(img->Height - 1 - j) + .5f) / (float)(img->Height - 1) - .5f;
-            float fov = 0.5f / tanf(40.f * 3.14159265*.5f / 180.f);
+	Vector4 n = tr->getNormal(I);
 
-            // This is only valid for square aspect ratio images
-            Vector3 rayDir = camera_u*u + camera_v*v + camera_dir*fov;
-            rayDir.normalize();
-            Ray ray(Position, rayDir);
+	return I.t;
 
-            IntersectionInfo I;
+	/*for (uint32_t si = 0; si < sampler->numSamples; si++)
+	{
+		float costerm = n * sampler->Samples[si].Cartesian;
 
-            bool hit = g_Scene.bvh->getIntersection(ray, &I, false);
+		// only the hemisphere pointer toward the normal
+		if (costerm > 0.0f)
+		{
+			Vector4 bPos = I.hit + (sampler->Samples[si].Cartesian*1.1);
+			Ray bRay(bPos, sampler->Samples[si].Cartesian);
 
-            if (!hit) {
-                out[index + 0] = 0;
-                out[index + 1] = 26;
-                out[index + 2] = 26;
-            }
-            else {
-                out[index + 0] = (uint8_t)(I.bary.z*255.0f);
-                out[index + 1] = (uint8_t)(I.bary.y*255.0f);
-                out[index + 2] = (uint8_t)(I.bary.x*255.0f);
-            }
+			IntersectionInfo It;
 
-            lines[cnt].o = Position;
-            lines[cnt].e = Position + (rayDir * 30.0f);
-            lines[cnt].hit = hit;
+			bool hitt = g_Scene.bvh->getIntersection(bRay, &It, true);
 
-            cnt++;
-        }
-    }
+			if (hitt)
+				occlusion += 1.0f;
+		}
+	}
 
-    img->SaveToFile("output-rt.png");
+	return occlusion / (float)(sampler->numSamples);*/
+}
+
+Vector4 RTCGetLightDirAsPoint(IntersectionInfo &intInfo)
+{
+	return normalize(Vector4(g_Config.m_Light.m_Position) - intInfo.hit);
+}
+
+// -1.0 - 1.0
+float rndFloat()
+{
+	return ((float)rand() / ((float)RAND_MAX / 2.0f)) - 1.0f;
+}
+
+Vector4 RTCGetLightDirAsArea(IntersectionInfo &intInfo)
+{
+	Vector4 rndPos;
+	float radius = g_Config.m_Light.m_Radius;
+
+	rndPos.x = g_Config.m_Light.m_Position.x + radius * rndFloat();
+	rndPos.y = g_Config.m_Light.m_Position.y + radius * rndFloat();
+	rndPos.z = g_Config.m_Light.m_Position.z + radius * rndFloat();
+
+	return normalize(rndPos - intInfo.hit);
+}
+
+float RTCOcclusionByLight(IntersectionInfo &intInfo, uint32_t nRays)
+{
+	uint32_t count = 0;
+
+	for (uint32_t i = 0; i < nRays; i++)
+	{
+		Ray lightRay(intInfo.hit, RTCGetLightDirAsArea(intInfo));
+
+		IntersectionInfo I;
+
+		if (g_Scene.bvh->getIntersection(lightRay, &I, true))
+			count++;
+	}
+	return (float)count / (float)nRays;
+}
+
+typedef struct WorkTile_t
+{
+	Image*		img_out;
+	uint32_t	start_x, start_y;
+	uint32_t	end_x, end_y;
+	float		fov;
+	Vector3		camera_pos;
+	Vector3		camera_dir;
+	Vector3		camera_u;
+	Vector3		camera_v;
+
+	uint32_t	num_rays;
+
+	uint32_t	progress;
+	
+	bool		notified;
+	bool		ready;
+	bool		done;
+
+	std::mutex				mtx;
+	std::condition_variable	cond;
+
+	WorkTile_t()
+	{
+
+	}
+
+	WorkTile_t(const WorkTile_t &w)
+	{
+		img_out = w.img_out;
+		start_x = w.start_x;
+		start_y = w.start_y;
+		end_x = w.end_x;
+		end_y = w.end_y;
+		fov = w.fov;
+		camera_pos = w.camera_pos;
+		camera_dir = w.camera_dir;
+		camera_u = w.camera_u;
+		camera_v = w.camera_v;
+
+		num_rays = w.num_rays;
+
+		progress = w.progress;
+
+		ready = w.ready;
+		notified = w.notified;
+		done = w.done;
+	}
+
+};
+
+bool g_Ready = false;
+
+void RTCTileExecute(WorkTile_t *work)
+{
+	IntersectionInfo intInfo;
+
+	work->progress = 0;
+
+	uint8_t *out = work->img_out->getData();
+
+	uint32_t Width = g_Config.m_Width;
+	uint32_t Height = g_Config.m_Height;
+
+	while (!work->done)
+	{
+		std::unique_lock<std::mutex> lck(work->mtx);
+
+		while (!work->notified) work->cond.wait(lck);
+
+		if (work->done)
+			break;
+
+		work->notified = false;
+
+		for (size_t j = work->start_y; j < work->end_y && j < Height; j++)
+		{
+			size_t index = j * work->img_out->Pitch + (work->start_x * sizeof(float) * 3);
+
+			float *pixel = (float *)&out[index];
+
+			for (size_t i = work->start_x, k = 0; i < work->end_x && i < Width; i++, k += 3)
+			{
+				float depth = 0.0f;
+				float occlusion = 0.0f;
+				float mask = 0.0f;
+
+				for (auto &offset : g_Config.m_Camera.m_Offsets)
+				{
+					Ray camRay = RTCCreateCameraRay(
+						work->camera_pos, work->camera_u, work->camera_v, work->camera_dir,
+						i, j, Width, Height, work->fov, offset.x, offset.y);
+
+					intInfo.reset();
+
+					if (g_Scene.bvh->getIntersection(camRay, &intInfo, false))
+					{
+						depth += intInfo.t;
+
+						Vector4 newOrig = intInfo.hit;
+						Vector4 hitNormal = intInfo.object->getNormal(intInfo);
+						Vector4 lightDir = RTCGetLightDirAsPoint(intInfo);
+
+						Ray lightRay(newOrig + (hitNormal * 0.01f), lightDir);
+
+						IntersectionInfo I;
+
+						if (g_Scene.bvh->getIntersection(lightRay, &I, true))
+						{
+							mask = 1.0f;
+						}
+
+						occlusion += RTCOcclusionByLight(intInfo, work->num_rays);
+					}
+				}
+
+				pixel[k + 0] = depth / (float)g_Config.m_Camera.m_Offsets.size();
+				pixel[k + 1] = occlusion / (float)g_Config.m_Camera.m_Offsets.size();
+				pixel[k + 2] = mask;
+
+				work->progress++;
+			}
+		}
+
+		work->ready = true;
+
+		g_Ready = true;
+	}
+}
+
+void RTCExecute()
+{
+	if (g_Scene.bvh == NULL)
+		return;
+
+	Image *imgOut = new Image(g_Config.m_Width, g_Config.m_Height, ImagePixelFormat::Img_Pixel_RGBF, 0);
+
+	uint32_t maxLightRays = 1000;
+
+	/* camera setup */
+	float fov = 0.5f / tanf(g_Config.m_Camera.m_Fovy * 3.14159265*.5f / 180.f);
+
+	Vector3 Position(g_Config.m_Camera.m_Position.x, g_Config.m_Camera.m_Position.y, g_Config.m_Camera.m_Position.z);
+	Vector3 LookAt(g_Config.m_Camera.m_LookAt.x, g_Config.m_Camera.m_LookAt.y, g_Config.m_Camera.m_LookAt.z);
+	Vector3 Up(g_Config.m_Camera.m_Up.x, g_Config.m_Camera.m_Up.y, g_Config.m_Camera.m_Up.z);
+
+	Vector3 camera_dir = LookAt - Position;
+	camera_dir.normalize();
+
+	Vector3 camera_u = cross(Up, camera_dir);
+	camera_u.normalize();
+
+	Vector3 camera_v = cross(camera_dir, camera_u);
+	camera_v.normalize();
+
+	camera_u = camera_u * -1.0f;
+	camera_v = camera_v * -1.0f;
+
+	/* thread setup */
+	uint32_t numCpus = std::thread::hardware_concurrency();
+	uint32_t workSplit;
+	uint32_t numPixels = g_Config.m_Width * g_Config.m_Height;
+
+	if (numCpus <= 1)
+		workSplit = 1;
+	else
+		workSplit = numCpus;
+
+	std::vector<WorkTile_t> work;
+
+	work.resize(workSplit);
+
+	for (uint32_t i = 0; i < workSplit; i++)
+	{
+		work[i].img_out = imgOut;
+		work[i].progress = 0;
+		work[i].camera_dir = camera_dir;
+		work[i].camera_u = camera_u;
+		work[i].camera_v = camera_v;
+		work[i].camera_pos = Position;
+		work[i].fov = fov;
+		work[i].num_rays = maxLightRays;
+		work[i].done = false;
+		work[i].ready = true;
+		work[i].notified = false;
+	}
+
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.1f, 0.1f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.3f, 0.1f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.5f, 0.1f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.7f, 0.1f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.9f, 0.1f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.2f, 0.3f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.4f, 0.3f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.6f, 0.3f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.8f, 0.3f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.1f, 0.5f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.3f, 0.5f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.5f, 0.5f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.7f, 0.5f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.9f, 0.5f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.2f, 0.7f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.4f, 0.7f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.6f, 0.7f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.8f, 0.7f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.1f, 0.9f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.3f, 0.9f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.5f, 0.9f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.7f, 0.9f));
+	g_Config.m_Camera.m_Offsets.push_back(Vector2(0.9f, 0.9f));
+
+	std::vector<std::thread> workThreads;
+
+	for (uint32_t i = 0; i < workSplit; i++)
+	{
+		workThreads.push_back(std::thread(RTCTileExecute, &work[i]));
+	}
+
+	g_Ready = true;
+
+	uint32_t tile_size = 64;
+
+	for (uint32_t y=0; y<g_Config.m_Height; y+= tile_size)
+	{
+		for (uint32_t x = 0; x<g_Config.m_Width;)
+		{
+			while (!g_Ready) std::this_thread::yield();
+
+			g_Ready = false;
+
+			for (uint32_t i = 0; i < workSplit && x < g_Config.m_Width; i++)
+			{
+				if (work[i].ready == true)
+				{
+					work[i].mtx.lock();
+
+					work[i].start_x = x;
+					work[i].start_y = y;
+					work[i].end_x = std::min(x + tile_size, g_Config.m_Width);
+					work[i].end_y = std::min(y + tile_size, g_Config.m_Height);
+
+					work[i].notified = true;
+					work[i].ready = false;
+
+					work[i].cond.notify_one();
+
+					work[i].mtx.unlock();
+
+					x += tile_size;
+				}
+			}
+
+			uint32_t progress = 0;
+
+			for (uint32_t i = 0; i < workSplit; i++)
+			{
+				progress += work[i].progress;
+			}
+
+			std::cout << "Progress " << ((float)progress / (float)numPixels) * 100.0f << "%\r";
+		}
+	}
+
+	for (uint32_t i = 0; i < workSplit; i++)
+	{
+		work[i].mtx.lock();
+
+		work[i].done = true;
+		work[i].notified = true;
+
+		work[i].cond.notify_one();
+
+		work[i].mtx.unlock();
+	}
+
+	for (uint32_t i = 0; i < workSplit; i++)
+	{
+		workThreads[i].join();
+	}
+
+	std::cout << "Progress 100.00%\n";
+
+	imgOut->SaveToFile(g_Config.m_OutputFile.c_str());
+
+	delete imgOut;
+}
+
+void RTCExecute1()
+{
+	if (g_Scene.bvh == NULL)
+		return;
+
+	Image *imgOut= new Image(g_Config.m_Width, g_Config.m_Height, ImagePixelFormat::Img_Pixel_RGBF, 0);
+
+	IntersectionInfo intInfo;
+
+	uint8_t *out = imgOut->getData();
+
+	uint32_t Width = g_Config.m_Width;
+	uint32_t Height = g_Config.m_Height;
+
+	uint32_t maxLightRays = 100;
+
+	float fov = 0.5f / tanf(g_Config.m_Camera.m_Fovy * 3.14159265*.5f / 180.f);
+
+	Vector3 Position(g_Config.m_Camera.m_Position.x, g_Config.m_Camera.m_Position.y, g_Config.m_Camera.m_Position.z);
+	Vector3 LookAt(g_Config.m_Camera.m_LookAt.x, g_Config.m_Camera.m_LookAt.y, g_Config.m_Camera.m_LookAt.z);
+	Vector3 Up(g_Config.m_Camera.m_Up.x, g_Config.m_Camera.m_Up.y, g_Config.m_Camera.m_Up.z);
+
+	Vector3 camera_dir = LookAt - Position;
+	camera_dir.normalize();
+
+	Vector3 camera_u = cross(Up, camera_dir);
+	camera_u.normalize();
+
+	Vector3 camera_v = cross(camera_dir, camera_u);
+	camera_v.normalize();
+
+	camera_u = camera_u * -1.0f;
+	camera_v = camera_v * -1.0f;
+
+	std::vector<Vector2> offList;
+	offList.push_back(Vector2(0.5, 0.5));
+
+	for (size_t j = 0, ridx = 0; j< Height; j++) {
+		size_t index = j * imgOut->Pitch;
+
+		float *pixel = (float *)&out[index];
+
+		for (size_t i = 0, k = 0; i< Width; i++, k += 3)
+		{
+
+			Ray camRay = RTCCreateCameraRay(
+				Position, camera_u, camera_v, camera_dir,
+				i, j, Width, Height,
+				fov, offList[0].x, offList[0].y);
+
+			intInfo.reset();
+
+			float depth = 0.0f;
+			float occlusion = 0.0f;
+			float mask = 0.0f;
+
+			if (g_Scene.bvh->getIntersection(camRay, &intInfo, false))
+			{
+				depth = intInfo.t;
+
+				Vector4 newOrig = intInfo.hit;
+				Vector4 hitNormal = intInfo.object->getNormal(intInfo);
+				Vector4 lightDir = RTCGetLightDirAsPoint(intInfo);
+
+				Ray lightRay(newOrig + (hitNormal * 0.01f), lightDir);
+
+				//intInfo.reset();
+
+				IntersectionInfo I;
+
+				if (g_Scene.bvh->getIntersection(lightRay, &I, true))
+				{
+					mask = 1.0f;
+				}
+
+				occlusion = RTCOcclusionByLight(intInfo, maxLightRays);
+			}
+
+			pixel[k + 0] = depth;
+			pixel[k + 1] = occlusion;
+			pixel[k + 2] = mask;
+		}
+	}
+
+	imgOut->SaveToFile(g_Config.m_OutputFile.c_str());
+
+	delete imgOut;
 }
 
 void UpdateEyePositionFromMouse()
@@ -222,26 +690,6 @@ void KeyEvent(uint8_t key, int x, int y)
 
     switch (key)
     {
-    case 'o': case 'O':
-    {
-        char fileName[1024] = { 0 };
-        if (osOpenDlg(fileName, 1024))
-        {
-            try {
-                g_Scene.loadFromFile(fileName);
-                std::cout << "File loaded" << std::endl;
-                g_Scene.buildBVH();
-                std::cout << "BVH built" << std::endl;
-                rayTrace();
-                osDisplaySceneInfo(&g_Scene);
-            }
-            catch (std::exception &e)
-            {
-                std::cout << e.what() << std::endl;
-            }
-        }
-
-    }
     break;
     case 'w': case 'W':
         g_Camera->ChangeVelocity(camSpeed);
@@ -425,21 +873,127 @@ void initRTScene()
     m->index[5] = 3;
 }
 
+
+
+void processOffline()
+{
+	try {
+		g_Scene.loadFromFile((char *)&g_Config.m_InputFile.c_str()[0]);
+		g_Scene.buildBVH();
+
+		if(g_Config.m_Verbosity)
+			osDisplaySceneInfo(&g_Scene);
+
+		RTCExecute();
+	}
+	catch (std::exception &e)
+	{
+		std::cout << e.what() << std::endl;
+	}
+}
+
+// --width 800 --height 800 --cam_pos "10.12 10.12 10.12" --cam_fovy 30.00 --cam_up "0.0 1.0 0.0" --cam_lookat "0.0 0.0 0.0" --light_pos "-0.842 -0.428 0.329" --output output.exr --input "D:\Serious\Models\SimpleScene\simple_low_div.obj"
+// --width 800 --height 800 --cam_pos "15.396 4.242 2.674" --cam_fovy 30.00 --cam_up "0.0 1.0 0.0" --cam_lookat "14.626 3.767 2.248" --light_pos "0.362 -0.479 -0.8" --output shadowset.exr --input "D:\Serious\Models\shadowSet\shadowset.obj"
+
+void parseCmdArgs(int argc, char **argv)
+{
+	g_Config.m_Interactive = 1;
+
+	if (argc <= 1)
+		return;
+
+	for (int i = 0; i < argc; i++)
+	{
+		if (!strcmp(argv[i], "--width"))
+		{
+			g_Config.m_Width = (++i<argc)? atoi(argv[i]): 0;
+		}
+		else if (!strcmp(argv[i], "--height"))
+		{
+			g_Config.m_Height = (++i<argc) ? atoi(argv[i]) : 0;
+		}
+		else if (!strcmp(argv[i], "--input"))
+		{
+			g_Config.m_InputFile = (++i<argc) ? string(argv[i]) : string("");
+		}
+		else if (!strcmp(argv[i], "--output"))
+		{
+			g_Config.m_OutputFile= (++i<argc) ? string(argv[i]) : string("");
+		}
+		else if (!strcmp(argv[i], "--cam_pos"))
+		{
+			if (++i >= argc)
+				continue;
+			sscanf(argv[i], "%f %f %f", &g_Config.m_Camera.m_Position.x, &g_Config.m_Camera.m_Position.y, &g_Config.m_Camera.m_Position.z);
+		}
+		else if (!strcmp(argv[i], "--cam_lookat"))
+		{
+			if (++i >= argc)
+				continue;
+			sscanf(argv[i], "%f %f %f", &g_Config.m_Camera.m_LookAt.x, &g_Config.m_Camera.m_LookAt.y, &g_Config.m_Camera.m_LookAt.z);
+		}
+		else if (!strcmp(argv[i], "--cam_up"))
+		{
+			if (++i >= argc)
+				continue;
+			sscanf(argv[i], "%f %f %f", &g_Config.m_Camera.m_Up.x, &g_Config.m_Camera.m_Up.y, &g_Config.m_Camera.m_Up.z);
+		}
+		else if (!strcmp(argv[i], "--cam_fovy"))
+		{
+			// focalLengthToFovy = 2.0f * atan(0.5f * frameHeight / focalLength);
+			// default frameHeight => 24.0
+
+			g_Config.m_Camera.m_Fovy = (++i<argc) ? atof(argv[i]) : 0;
+		}
+		else if (!strcmp(argv[i], "--light_pos"))
+		{
+			if (++i >= argc)
+				continue;
+			sscanf(argv[i], "%f %f %f", &g_Config.m_Light.m_Position.x, &g_Config.m_Light.m_Position.y, &g_Config.m_Light.m_Position.z);
+		}
+		//--light_radius 0.5 --light_intensity 1.0
+		else if (!strcmp(argv[i], "--light_radius"))
+		{
+			g_Config.m_Light.m_Radius = (++i<argc) ? atof(argv[i]) : 0.0f;
+		}
+		else if (!strcmp(argv[i], "--light_intensity"))
+		{
+			g_Config.m_Light.m_Intensity = (++i<argc) ? atof(argv[i]) : 0.0f;
+		}
+		else if (!strcmp(argv[i], "--verbosity"))
+		{
+			g_Config.m_Verbosity = 1;
+		}
+	}
+
+	g_Config.m_Interactive = 0;
+}
+
 int main(int argc, char **argv)
 {
     initThirdParty(&argc, &argv);
-    atexit(&CleanUp);
 
-    glutSetup();
+	atexit(&CleanUp);
 
-    cameraSetup();
+	parseCmdArgs(argc, argv);
 
-    toolBoxSetup();
+	if (g_Config.m_Interactive)
+	{
+		cameraSetup();
 
-    initRTScene();
+		toolBoxSetup();
 
-    // Run GLUT loop and hence the application
-    glutMainLoop();
+		initRTScene();
+
+		glutSetup();
+
+		// Run GLUT loop and hence the application
+		glutMainLoop();
+	}
+	else 
+	{
+		processOffline();
+	}
 
     return 0;
 }

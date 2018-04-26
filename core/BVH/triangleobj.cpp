@@ -79,7 +79,7 @@ bool TriangleObj::getIntersection(const Ray & ray, IntersectionInfo * intersecti
 
     float a = e1 * p1;
 
-    if (a > -0.00001 && a < 0.00001)
+    if (a > -0.000001f && a < 0.000001f)
         return false;
 
     det = 1.0f / a;
@@ -103,7 +103,7 @@ bool TriangleObj::getIntersection(const Ray & ray, IntersectionInfo * intersecti
     i1.z = e2 * q1;
     i1.z *= det;
 
-    if (i1.z > 0.000001f)
+    if (i1.z > 0.0001f)
     {
         intersection->object = this;
 

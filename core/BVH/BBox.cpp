@@ -1,21 +1,21 @@
 #include "BBox.h"
 #include <algorithm>
 
-BBox::BBox(const vec4& min, const vec4& max)
+BBox::BBox(const Vector4& min, const Vector4& max)
   : min(min), max(max) { extent = max - min; }
 
-BBox::BBox(const vec4& p)
+BBox::BBox(const Vector4& p)
   : min(p), max(p) { extent = max - min; }
 
-  void BBox::expandToInclude(const vec4& p) {
-    min = glm::min(min, p);
-    max = glm::max(max, p);
+  void BBox::expandToInclude(const Vector4& p) {
+    min = ::vmin(min, p);
+    max = ::vmax(max, p);
     extent = max - min;
   }
 
 void BBox::expandToInclude(const BBox& b) {
-  min = glm::min(min, b.min);
-  max = glm::max(max, b.max);
+  min = ::vmin(min, b.min);
+  max = ::vmax(max, b.max);
   extent = max - min;
 }
 
